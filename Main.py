@@ -1,24 +1,31 @@
-import pygame
+import pygame,sys
 import time
 import math
+from math import radians
 from pygame import mixer
+from pygame.locals import *
 pygame.init()
 pygame.font.init()
 pygame.mixer.init()
-
+MOUTH_EVENT = USEREVENT+1
 
 class PacMan:
-    def __init__(self,direction,gameBoard,square,screen,pacman):
+    def __init__(self,direction,gameBoard,square,screen,pacman,width=1,height=1):
         self.direction=direction
         self.gameBoard = gameBoard
         self.square=square
         self.screen=screen
         self.pacman=pacman
+        self.mouth_closed=False
+        self.width, self.height = width, height
+
     def canMove(self,row,col):
         if self.gameBoard[int(row)][int(col)]!=0:
             return True
         return False
 
+    def toggle_mouth(self):
+        self.mouth_closed = not self.mouth_closed
 
     def move(self,direction,row,col):
         if direction == 'up':
@@ -40,22 +47,24 @@ class PacMan:
         for i in range(len(self.gameBoard[0])):
             for j in range(len(self.gameBoard[1])):
                 if self.gameBoard[i][j]== 0:
-                    pygame.draw.rect(self.screen,[0,0,50],(j*self.square, i*self.square,self.square,self.square),0)
+                    pygame.draw.rect(self.screen,[0,0,50],(j*self.square, i*self.square,self.square,self.square),15)
+                    pygame.draw.rect(self.screen, [0, 0, 50],(j * self.square, i * self.square, int(self.square/1.3), int(self.square/1.3)))
                 elif self.gameBoard[i][j] == 1:
-                    pygame.draw.circle(self.screen, [255, 255, 255], (j * self.square + self.square/2, i * self.square + self.square/2), self.square/8,2)
+                    pygame.draw.circle(self.screen, [255, 255, 255], (j * self.square + self.square/2, i * self.square + self.square/2), self.square/8,int(self.square/30))
                 if self.gameBoard[i][j]==2:
                     pygame.draw.circle(self.screen, [0, 0, 0], (j * self.square + self.square / 2, i * self.square + self.square / 2), self.square / 5)
-                elif self.gameBoard[i][j] == 7:
+                elif self.gameBoard[i][j] == 3:
                     pygame.draw.circle(self.screen, [100,0,150], (j * self.square + self.square/2, i * self.square + self.square/2),self.square/4)
-                elif self.gameBoard[i][j] == 8:
+                elif self.gameBoard[i][j] == 4:
                     pygame.draw.circle(self.screen, [204, 102, 0], (j * self.square + self.square/2, i * self.square + self.square/2),self.square/5)
-        pygame.draw.circle(self.screen,[255,255,0],(math.floor(self.pacman[1]*self.square)+self.square/2,math.floor(self.pacman[0]*self.square+self.square/2)),self.square/3)
+        pygame.draw.circle(self.screen,[255,255,0],(math.floor(self.pacman[1]*self.square+self.square/2),math.floor(self.pacman[0]*self.square+self.square/2)),self.square/3)
         pygame.display.flip()
         pygame.display.update()
 
 
 def main():
-    square = 40
+    square = 30
+
 
     from pygame.locals import (
         K_UP,
@@ -69,7 +78,7 @@ def main():
 
     gameBoard = [
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
-        [0, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 8, 1, 0, ],
+        [0, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 4, 1, 0, ],
         [0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, ],
         [0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, ],
         [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, ],
@@ -78,14 +87,14 @@ def main():
         [0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, ],
         [0, 0, 0, 0, 0, 1, 0, 1, 1, 2, 2, 1, 1, 0, 1, 0, 0, 0, 0, 0, ],
         [0, 0, 0, 0, 0, 1, 0, 1, 0, 2, 2, 0, 1, 0, 1, 0, 0, 0, 0, 0, ],
-        [0, 0, 0, 0, 0, 1, 0, 1, 0, 7, 7, 0, 1, 0, 1, 0, 0, 0, 0, 0, ],
-        [0, 0, 0, 0, 0, 1, 1, 1, 0, 7, 7, 0, 1, 1, 1, 0, 0, 0, 0, 0, ],
+        [0, 0, 0, 0, 0, 1, 0, 1, 0, 3, 3, 0, 1, 0, 1, 0, 0, 0, 0, 0, ],
+        [0, 0, 0, 0, 0, 1, 1, 1, 0, 3, 3, 0, 1, 1, 1, 0, 0, 0, 0, 0, ],
         [0, 0, 0, 0, 0, 1, 0, 1, 0, 2, 2, 0, 1, 0, 1, 0, 0, 0, 0, 0, ],
         [0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, ],
         [0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, ],
-        [0, 1, 8, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, ],
+        [0, 1, 4, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, ],
         [0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, ],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 8, 0, ],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 0, ],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ]
     ]
@@ -99,11 +108,18 @@ def main():
     running = True
     coinCount = 0
     req = 'up'
+    mixer.music.load('pacman_beginning.wav')
+    mixer.music.play(-1)
+    mixer.music.set_volume(0.05)
+    pygame.time.set_timer(MOUTH_EVENT, 333)
 
     while running:
         user = PacMan(direction,gameBoard,square,screen,pacman)
         user.Board()
         for event in pygame.event.get():
+            if event.type == MOUTH_EVENT:
+                user.toggle_mouth()
+                continue
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     running = False
@@ -115,6 +131,9 @@ def main():
                     req='left'
                 elif event.key == K_DOWN:
                     req='down'
+            if event.type == QUIT:
+                pygame.quit()
+                sys.exit()
 
         if req=='up':
             if (user.canMove(math.floor(pacman[0] - .25), pacman[1]) and pacman[1]%1.0 ==0):
@@ -142,11 +161,13 @@ def main():
                 eating_Sound= mixer.Sound('pacman_chomp.wav')
                 eating_Sound.set_volume(0.2)
                 eating_Sound.play()
-        if gameBoard[int(pacman[0])][int(pacman[1])] == 8:
+        if gameBoard[int(pacman[0])][int(pacman[1])] == 4:
             coinCount+= 200
             print("The current coins:", coinCount)
             gameBoard[int(pacman[0])][int(pacman[1])] = 2
-
-        time.sleep(0.035)
+            fruit_Sound = mixer.Sound('pacman_eatfruit.wav')
+            fruit_Sound.set_volume(0.2)
+            fruit_Sound.play()
+        time.sleep(0.03)
 if __name__ == '__main__':
     main()
