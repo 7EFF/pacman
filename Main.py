@@ -108,7 +108,9 @@ class PacMan:
                         intro_sound.play()
                         for i in range(len(self.gameBoard[0])):
                             for j in range(len(self.gameBoard[1])):
-                                pygame.draw.rect(self.screen,[15,0,50],(j*self.square, i*self.square,self.square,self.square))
+                                pygame.draw.rect(self.screen, [0, 0, 0],(j * self.square, i * self.square, self.square, self.square))
+                                pygame.draw.rect(self.screen, [15, 0, 50],(j * self.square, i * self.square, self.square, self.square),math.floor(self.square / 2))
+                                pygame.draw.rect(self.screen, [15, 0, 50], (j * self.square, i * self.square, int(self.square / 1.5), int(self.square / 1.5)))
                             time.sleep(4/len(self.gameBoard[0]))
                             if i==len(self.gameBoard[0]):
                                 break
