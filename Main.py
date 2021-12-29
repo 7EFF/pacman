@@ -10,22 +10,22 @@ pygame.mixer.init()
 MOUTH_EVENT = USEREVENT+1
 
 class PacMan:
-    def __init__(self,direction,gameBoard,square,screen,pacman,width=1,height=1):
+    def __init__(self,direction,gameBoard,square,screen,pacman,coinCount,length,width):
         self.direction=direction
         self.gameBoard = gameBoard
         self.square=square
         self.screen=screen
         self.pacman=pacman
         self.mouth_closed=False
-        self.width, self.height = width, height
+        self.coinCount=coinCount
+        self.length=length
+        self.width=width
 
     def canMove(self,row,col):
         if self.gameBoard[int(row)][int(col)]!=0:
             return True
         return False
 
-    def toggle_mouth(self):
-        self.mouth_closed = not self.mouth_closed
 
     def move(self,direction,row,col):
         if direction == 'up':
@@ -47,10 +47,10 @@ class PacMan:
         for i in range(len(self.gameBoard[0])):
             for j in range(len(self.gameBoard[1])):
                 if self.gameBoard[i][j]== 0:
-                    pygame.draw.rect(self.screen,[0,0,50],(j*self.square, i*self.square,self.square,self.square),15)
-                    pygame.draw.rect(self.screen, [0, 0, 50],(j * self.square, i * self.square, int(self.square/1.3), int(self.square/1.3)))
+                    pygame.draw.rect(self.screen,[15,0,50],(j*self.square, i*self.square,self.square,self.square),math.floor(self.square/2))
+                    pygame.draw.rect(self.screen, [15, 0, 50],(j * self.square, i * self.square, int(self.square/1.5), int(self.square/1.5)))
                 elif self.gameBoard[i][j] == 1:
-                    pygame.draw.circle(self.screen, [255, 255, 255], (j * self.square + self.square/2, i * self.square + self.square/2), self.square/8,int(self.square/30))
+                    pygame.draw.circle(self.screen, [255, 255, 255], (j * self.square + self.square/2, i * self.square + self.square/2), self.square/8,int(self.square/20))
                 if self.gameBoard[i][j]==2:
                     pygame.draw.circle(self.screen, [0, 0, 0], (j * self.square + self.square / 2, i * self.square + self.square / 2), self.square / 5)
                 elif self.gameBoard[i][j] == 3:
@@ -58,13 +58,57 @@ class PacMan:
                 elif self.gameBoard[i][j] == 4:
                     pygame.draw.circle(self.screen, [204, 102, 0], (j * self.square + self.square/2, i * self.square + self.square/2),self.square/5)
         pygame.draw.circle(self.screen,[255,255,0],(math.floor(self.pacman[1]*self.square+self.square/2),math.floor(self.pacman[0]*self.square+self.square/2)),self.square/3)
+        Font = pygame.font.SysFont('arial black', math.floor(self.square/2))
+        text = Font.render('COINS: {}'.format(self.coinCount), True, (255, 255, 0))
+        textRect = text.get_rect()
+        textRect.center = (self.length / 2, self.width / 20)
+        self.screen.blit(text, textRect)
         pygame.display.flip()
         pygame.display.update()
 
-
+    def Intro_Render(self):
+        running = True
+        while running:
+            self.screen.fill((0, 0, 0))
+            Font = pygame.font.SysFont('arial black', 30)
+            text = Font.render('PRESS SPACE TO START', True, (255, 0, 0))
+            textRect = text.get_rect()
+            textRect.center = (self.length / 2, self.width / 20)
+            self.screen.blit(text, textRect)
+            for event in pygame.event.get():
+                if event.type == KEYDOWN:
+                    if event.key == K_ESCAPE:
+                        pygame.quit()
+                        sys.exit()
+                    if event.key == K_SPACE:
+                        intro_sound = mixer.Sound('pacman_beginning.wav')
+                        intro_sound.set_volume(0.2)
+                        intro_sound.play()
+                        time.sleep(4)
+                        return
+                if event.type == QUIT:
+                    pygame.quit()
+                    sys.exit()
+            pygame.display.update()
+    def died_wait(self):
+        while True:
+            for event in pygame.event.get():
+                if event.type == KEYDOWN:
+                    if event.key == K_ESCAPE:
+                        pygame.quit()
+                        sys.exit()
+                    if event.type == QUIT:
+                        pygame.quit()
+                        sys.exit()
+            self.screen.fill((0, 0, 0))
+            Font = pygame.font.SysFont('arial black', 30)
+            text = Font.render('YOU DIED, WAITING FOR OPPONENT', True, (255, 255, 0))
+            textRect = text.get_rect()
+            textRect.center = (self.length / 2, self.width / 2)
+            self.screen.blit(text, textRect)
+            pygame.display.update()
 def main():
-    square = 30
-
+    square = 35
 
     from pygame.locals import (
         K_UP,
@@ -86,11 +130,11 @@ def main():
         [0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, ],
         [0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, ],
         [0, 0, 0, 0, 0, 1, 0, 1, 1, 2, 2, 1, 1, 0, 1, 0, 0, 0, 0, 0, ],
-        [0, 0, 0, 0, 0, 1, 0, 1, 0, 2, 2, 0, 1, 0, 1, 0, 0, 0, 0, 0, ],
+        [0, 0, 0, 0, 0, 1, 1, 1, 0, 2, 2, 0, 1, 1, 1, 0, 0, 0, 0, 0, ],
         [0, 0, 0, 0, 0, 1, 0, 1, 0, 3, 3, 0, 1, 0, 1, 0, 0, 0, 0, 0, ],
-        [0, 0, 0, 0, 0, 1, 1, 1, 0, 3, 3, 0, 1, 1, 1, 0, 0, 0, 0, 0, ],
-        [0, 0, 0, 0, 0, 1, 0, 1, 0, 2, 2, 0, 1, 0, 1, 0, 0, 0, 0, 0, ],
-        [0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, ],
+        [0, 0, 0, 0, 0, 1, 0, 1, 0, 3, 3, 0, 1, 0, 1, 0, 0, 0, 0, 0, ],
+        [0, 0, 0, 0, 0, 1, 1, 1, 0, 2, 2, 0, 1, 1, 1, 0, 0, 0, 0, 0, ],
+        [0, 0, 0, 0, 0, 1, 0, 1, 2, 2, 2, 2, 1, 0, 1, 0, 0, 0, 0, 0, ],
         [0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, ],
         [0, 1, 4, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, ],
         [0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, ],
@@ -108,18 +152,11 @@ def main():
     running = True
     coinCount = 0
     req = 'up'
-    mixer.music.load('pacman_beginning.wav')
-    mixer.music.play(-1)
-    mixer.music.set_volume(0.05)
-    pygame.time.set_timer(MOUTH_EVENT, 333)
-
+    user = PacMan(direction, gameBoard, square, screen, pacman,coinCount,length,width)
+    user.Intro_Render()
     while running:
-        user = PacMan(direction,gameBoard,square,screen,pacman)
         user.Board()
         for event in pygame.event.get():
-            if event.type == MOUTH_EVENT:
-                user.toggle_mouth()
-                continue
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     running = False
@@ -168,6 +205,9 @@ def main():
             fruit_Sound = mixer.Sound('pacman_eatfruit.wav')
             fruit_Sound.set_volume(0.2)
             fruit_Sound.play()
+        if gameBoard[int(pacman[0])][int(pacman[1])] == 3:
+            user.died_wait()
         time.sleep(0.03)
+        user = PacMan(direction, gameBoard, square, screen, pacman,coinCount,length,width)
 if __name__ == '__main__':
     main()
