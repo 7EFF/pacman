@@ -1,4 +1,4 @@
-import pygame,sys
+import pygame,sys,os
 import time
 import math
 from math import radians
@@ -7,7 +7,6 @@ from pygame.locals import *
 pygame.init()
 pygame.font.init()
 pygame.mixer.init()
-MOUTH_EVENT = USEREVENT+1
 
 class PacMan:
     def __init__(self,direction,gameBoard,square,screen,pacman,coinCount,length,width):
@@ -66,6 +65,27 @@ class PacMan:
         pygame.display.flip()
         pygame.display.update()
 
+    def winning(self):
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type == KEYDOWN:
+                    if event.key == K_ESCAPE:
+                        pygame.quit()
+                        sys.exit()
+                    if event.type == QUIT:
+                        pygame.quit()
+                        sys.exit()
+            self.screen.fill((0, 0, 0))
+            Font = pygame.font.SysFont('arial black', 30)
+            text = Font.render('YOU WON THIS DUEL', True, (255, 255, 0))
+            textRect = text.get_rect()
+            textRect.center = (self.length / 2, self.width / 3)
+            self.screen.blit(text, textRect)
+            pygame.display.update()
+
+
+
     def Intro_Render(self):
         running = True
         while running:
@@ -73,8 +93,10 @@ class PacMan:
             Font = pygame.font.SysFont('arial black', 30)
             text = Font.render('PRESS SPACE TO START', True, (255, 0, 0))
             textRect = text.get_rect()
-            textRect.center = (self.length / 2, self.width / 20)
+            textRect.center = (self.length / 2, self.width / 5)
             self.screen.blit(text, textRect)
+            player = pygame.image.load(os.path.join("pacman_pic.png"))
+            self.screen.blit(player, (self.length/5, self.width/3))
             for event in pygame.event.get():
                 if event.type == KEYDOWN:
                     if event.key == K_ESCAPE:
@@ -84,7 +106,13 @@ class PacMan:
                         intro_sound = mixer.Sound('pacman_beginning.wav')
                         intro_sound.set_volume(0.2)
                         intro_sound.play()
-                        time.sleep(4)
+                        for i in range(len(self.gameBoard[0])):
+                            for j in range(len(self.gameBoard[1])):
+                                pygame.draw.rect(self.screen,[15,0,50],(j*self.square, i*self.square,self.square,self.square))
+                            time.sleep(4/len(self.gameBoard[0]))
+                            if i==len(self.gameBoard[0]):
+                                break
+                            pygame.display.update()
                         return
                 if event.type == QUIT:
                     pygame.quit()
@@ -133,7 +161,7 @@ def main():
         [0, 0, 0, 0, 0, 1, 1, 1, 0, 2, 2, 0, 1, 1, 1, 0, 0, 0, 0, 0, ],
         [0, 0, 0, 0, 0, 1, 0, 1, 0, 3, 3, 0, 1, 0, 1, 0, 0, 0, 0, 0, ],
         [0, 0, 0, 0, 0, 1, 0, 1, 0, 3, 3, 0, 1, 0, 1, 0, 0, 0, 0, 0, ],
-        [0, 0, 0, 0, 0, 1, 1, 1, 0, 2, 2, 0, 1, 1, 1, 0, 0, 0, 0, 0, ],
+        [0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, ],
         [0, 0, 0, 0, 0, 1, 0, 1, 2, 2, 2, 2, 1, 0, 1, 0, 0, 0, 0, 0, ],
         [0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, ],
         [0, 1, 4, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, ],
@@ -207,6 +235,8 @@ def main():
             fruit_Sound.play()
         if gameBoard[int(pacman[0])][int(pacman[1])] == 3:
             user.died_wait()
+        if coinCount==1860:
+            user.winning()
         time.sleep(0.03)
         user = PacMan(direction, gameBoard, square, screen, pacman,coinCount,length,width)
 if __name__ == '__main__':
