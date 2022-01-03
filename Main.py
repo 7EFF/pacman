@@ -1,4 +1,9 @@
-import pygame
+import pygame,sys,os
+import time
+import math
+from math import radians
+from pygame import mixer
+from pygame.locals import *
 pygame.init()
 pygame.font.init()
 pygame.mixer.init()
@@ -17,8 +22,8 @@ class PacMan:
         self.width=width
         self.ghosts = []
         self.g_pos=[]
-
         self.make_ghosts()
+        self.colour=0
 
     ###########################MOVEMENT###########################
 
@@ -49,7 +54,18 @@ class PacMan:
 
     def make_ghosts(self):
         for ghost_pos in self.g_pos:
-            self.ghosts.append(Ghost(self,ghost_pos))
+            if self.colour==0:
+                gh_colour=[255,0,255]
+            if self.colour==1:
+                gh_colour=[255,0,0]
+            if self.colour==2:
+                gh_colour=[0,0,255]
+            if self.colour==3:
+                gh_colour=[255,255,0]
+            self.ghosts.append(Ghost(self,ghost_pos,gh_colour))
+            self.colour+=1
+        for gh in self.ghosts:
+            gh.drawGhost()
 
     ###########################GHOSTS###########################
 
@@ -209,7 +225,7 @@ def main():
     coinCount = 0
     req = 'up'
     user = PacMan(direction, gameBoard, square, screen, pacman,coinCount,length,width)
-    user.Intro_Render()
+    #user.Intro_Render()
     while running:
         user.Board()
         for event in pygame.event.get():
