@@ -1,12 +1,8 @@
-import pygame,sys,os
-import time
-import math
-from math import radians
-from pygame import mixer
-from pygame.locals import *
+import pygame
 pygame.init()
 pygame.font.init()
 pygame.mixer.init()
+from ghosts_class import *
 
 class PacMan:
     def __init__(self,direction,gameBoard,square,screen,pacman,coinCount,length,width):
@@ -19,6 +15,12 @@ class PacMan:
         self.coinCount=coinCount
         self.length=length
         self.width=width
+        self.ghosts = []
+        self.g_pos=[]
+
+        self.make_ghosts()
+
+    ###########################MOVEMENT###########################
 
     def canMove(self,row,col):
         if self.gameBoard[int(row)][int(col)]!=0:
@@ -41,6 +43,18 @@ class PacMan:
                 row += .25
         return row,col
 
+    ###########################MOVEMENT###########################
+
+    ###########################GHOSTS###########################
+
+    def make_ghosts(self):
+        for ghost_pos in self.g_pos:
+            self.ghosts.append(Ghost(self,ghost_pos))
+
+    ###########################GHOSTS###########################
+
+    ###########################DRAWING###########################
+
     def Board(self):
         self.screen.fill((0,0,0))
         for i in range(len(self.gameBoard[0])):
@@ -53,15 +67,18 @@ class PacMan:
                 if self.gameBoard[i][j]==2:
                     pygame.draw.circle(self.screen, [0, 0, 0], (j * self.square + self.square / 2, i * self.square + self.square / 2), self.square / 5)
                 elif self.gameBoard[i][j] == 3:
-                    pygame.draw.circle(self.screen, [100,0,150], (j * self.square + self.square/2, i * self.square + self.square/2),self.square/4)
-                elif self.gameBoard[i][j] == 4:
                     pygame.draw.circle(self.screen, [204, 102, 0], (j * self.square + self.square/2, i * self.square + self.square/2),self.square/5)
+
+                if self.gameBoard[i][j] == 4 or self.gameBoard[i][j] == 5 or self.gameBoard[i][j] == 6 or self.gameBoard[i][j] == 7:
+                    #pygame.draw.circle(self.screen, [100, 0, 200], (j * self.square + self.square/2, i * self.square + self.square/2),self.square/4)
+                    self.g_pos.append([i, j])
         pygame.draw.circle(self.screen,[255,255,0],(math.floor(self.pacman[1]*self.square+self.square/2),math.floor(self.pacman[0]*self.square+self.square/2)),self.square/3)
         Font = pygame.font.SysFont('arial black', math.floor(self.square/2))
         text = Font.render('COINS: {}'.format(self.coinCount), True, (255, 255, 0))
         textRect = text.get_rect()
         textRect.center = (self.length / 2, self.width / 20)
         self.screen.blit(text, textRect)
+        self.make_ghosts()
         pygame.display.flip()
         pygame.display.update()
 
@@ -76,6 +93,9 @@ class PacMan:
                     if event.type == QUIT:
                         pygame.quit()
                         sys.exit()
+                if event.type == QUIT:
+                    pygame.quit()
+                    sys.exit()
             self.screen.fill((0, 0, 0))
             Font = pygame.font.SysFont('arial black', 30)
             text = Font.render('YOU WON THIS DUEL', True, (255, 255, 0))
@@ -127,9 +147,9 @@ class PacMan:
                     if event.key == K_ESCAPE:
                         pygame.quit()
                         sys.exit()
-                    if event.type == QUIT:
-                        pygame.quit()
-                        sys.exit()
+                if event.type == QUIT:
+                    pygame.quit()
+                    sys.exit()
             self.screen.fill((0, 0, 0))
             Font = pygame.font.SysFont('arial black', 30)
             text = Font.render('YOU DIED, WAITING FOR OPPONENT', True, (255, 255, 0))
@@ -137,9 +157,10 @@ class PacMan:
             textRect.center = (self.length / 2, self.width / 2)
             self.screen.blit(text, textRect)
             pygame.display.update()
+
+    ###########################DRAWING###########################
 def main():
     square = 35
-
     from pygame.locals import (
         K_UP,
         K_DOWN,
@@ -152,7 +173,7 @@ def main():
 
     gameBoard = [
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
-        [0, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 4, 1, 0, ],
+        [0, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 3, 1, 0, ],
         [0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, ],
         [0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, ],
         [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, ],
@@ -161,16 +182,21 @@ def main():
         [0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, ],
         [0, 0, 0, 0, 0, 1, 0, 1, 1, 2, 2, 1, 1, 0, 1, 0, 0, 0, 0, 0, ],
         [0, 0, 0, 0, 0, 1, 1, 1, 0, 2, 2, 0, 1, 1, 1, 0, 0, 0, 0, 0, ],
-        [0, 0, 0, 0, 0, 1, 0, 1, 0, 3, 3, 0, 1, 0, 1, 0, 0, 0, 0, 0, ],
-        [0, 0, 0, 0, 0, 1, 0, 1, 0, 3, 3, 0, 1, 0, 1, 0, 0, 0, 0, 0, ],
+        [0, 0, 0, 0, 0, 1, 0, 1, 0, 4, 5, 0, 1, 0, 1, 0, 0, 0, 0, 0, ],
+        [0, 0, 0, 0, 0, 1, 0, 1, 0, 6, 7, 0, 1, 0, 1, 0, 0, 0, 0, 0, ],
         [0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, ],
-        [0, 0, 0, 0, 0, 1, 0, 1, 2, 2, 2, 2, 1, 0, 1, 0, 0, 0, 0, 0, ],
+        [0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, ],
         [0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, ],
-        [0, 1, 4, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, ],
+        [0, 1, 3, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, ],
         [0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, ],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 0, ],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 0, ],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ]
+        #1=מקום עם מטבעות
+        #0=קיר שאי אפשר לעבור
+        #2=מקום שאפשר ללכת בוא אבל בלי מטבעות
+        #4=מטסעות גדולים
+        #5,6,7,8=רוחות לפי מספרים
     ]
     [length, width] = [len(gameBoard[0]) * square, len(gameBoard[1]) * square]
     screen = pygame.display.set_mode((width, length))
@@ -228,16 +254,16 @@ def main():
                 eating_Sound= mixer.Sound('pacman_chomp.wav')
                 eating_Sound.set_volume(0.2)
                 eating_Sound.play()
-        if gameBoard[int(pacman[0])][int(pacman[1])] == 4:
+        if gameBoard[int(pacman[0])][int(pacman[1])] == 3:
             coinCount+= 200
             print("The current coins:", coinCount)
             gameBoard[int(pacman[0])][int(pacman[1])] = 2
             fruit_Sound = mixer.Sound('pacman_eatfruit.wav')
             fruit_Sound.set_volume(0.2)
             fruit_Sound.play()
-        if gameBoard[int(pacman[0])][int(pacman[1])] == 3:
+        if gameBoard[int(pacman[0])][int(pacman[1])] == 4 or gameBoard[int(pacman[0])][int(pacman[1])] == 5 or gameBoard[int(pacman[0])][int(pacman[1])] == 6 or gameBoard[int(pacman[0])][int(pacman[1])] == 7:
             user.died_wait()
-        if coinCount==1860:
+        if coinCount==1900:
             user.winning()
         time.sleep(0.03)
         user = PacMan(direction, gameBoard, square, screen, pacman,coinCount,length,width)
