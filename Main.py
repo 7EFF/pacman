@@ -176,18 +176,9 @@ class PacMan:
 
     ###########################DRAWING###########################
 
-    ###########################HELPER###########################
-
-    def pause(self,time):
-        cur = 0
-        while not cur == time:
-            cur += 1
-
-    ###########################HELPER###########################
-
 def main():
     square = 35
-    pacspeed=1/8
+    pacspeed=1/16
     from pygame.locals import (
         K_UP,
         K_DOWN,
@@ -290,7 +281,6 @@ def main():
             user.died_wait()
         if coinCount==1900:
             user.winning()
-        user.pause(100000)
         user = PacMan(direction, gameBoard, square, screen, pacman,coinCount,length,width,pacspeed)
 if __name__ == '__main__':
     main()
