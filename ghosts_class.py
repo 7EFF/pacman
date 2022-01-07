@@ -33,19 +33,15 @@ class Ghost:
     def randDirection(self):
         if self.canMove(math.ceil(self.row + self.ghostspeed), self.col) and self.col % 1.0 == 0:
             self.direction = 'down'
-            print("down",self.colour)
         if self.canMove(self.row, math.ceil(self.col + self.ghostspeed)) and self.row % 1.0 == 0:
             self.direction='right'
-            print("right",self.colour)
         if self.canMove(self.row, math.floor(self.col - self.ghostspeed)) and self.row % 1.0 == 0:
             self.direction='left'
-            print("left",self.colour)
         if self.canMove(math.floor(self.row - self.ghostspeed), self.col) and self.col % 1.0 == 0:
             self.direction='up'
-            print("up",self.colour)
         self.move()
-        
-    
+
+
     def movementBehaves(self):
         if self.ghostBehave=='Random':
             self.randDirection()
