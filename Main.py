@@ -16,15 +16,44 @@ class PacMan:
         self.square=square
         self.screen=screen
         self.pacman=pacman
-        self.mouth_closed=False
         self.coinCount=coinCount
         self.length=length
         self.width=width
-        self.ghosts = []
         self.g_pos=[]
-        self.make_ghosts()
-        self.colour=0
         self.pacspeed=pacspeed
+        self.ghosts = []
+
+    ###########################SET & GET###########################
+
+    def setDirection(self,direction):
+        self.direction=direction
+
+    def setPacMan(self,pacman):
+        self.pacman=pacman
+
+    def setCoinCount(self,coinCount):
+        self.coinCount=coinCount
+
+    def setGameBoard(self,gameBoard):
+        self.gameBoard = gameBoard
+
+    def setScreen(self,screen):
+        self.screen = screen
+
+    def setSquare(self,square):
+        self.square = square
+
+    def setLength(self,length):
+        self.length = length
+
+    def setWidth(self,width):
+        self.width=width
+
+    def pacspeed(self,pacspeed):
+        self.pacspeed=pacspeed
+
+    ###########################SET & GET###########################
+
 
     ###########################MOVEMENT###########################
 
@@ -53,20 +82,17 @@ class PacMan:
 
     ###########################GHOSTS###########################
 
-    def make_ghosts(self):
-        for ghost_pos in self.g_pos:
-            if self.colour==0:
-                gh_colour=[255,0,255]
-            if self.colour==1:
-                gh_colour=[255,0,0]
-            if self.colour==2:
-                gh_colour=[0,0,255]
-            if self.colour==3:
-                gh_colour=[255,255,0]
-            self.ghosts.append(Ghost(self,ghost_pos,gh_colour))
-            self.colour+=1
+    def draw_Ghosts(self):
         for gh in self.ghosts:
             gh.drawGhost()
+            gh.movementBehaves()
+        pygame.display.update()
+
+    def make_Ghosts(self):
+        self.ghosts = [Ghost(self, 11, 10, [0, 255, 0],self.pacman[0],self.pacman[1]), Ghost(self, 10, 10, [255, 150, 0],self.pacman[0],self.pacman[1]),Ghost(self, 11, 9, [0, 0, 255],self.pacman[0],self.pacman[1]), Ghost(self, 10, 9, [255, 0, 255],self.pacman[0],self.pacman[1])]
+        for gh in self.ghosts:
+            gh.drawGhost()
+        pygame.display.update()
 
     ###########################GHOSTS###########################
 
@@ -77,16 +103,15 @@ class PacMan:
         for i in range(len(self.gameBoard[0])):
             for j in range(len(self.gameBoard[1])):
                 if self.gameBoard[i][j]== 0:
-                    pygame.draw.rect(self.screen,[15,0,50],(j*self.square, i*self.square,self.square,self.square),math.floor(self.square/2))
-                    pygame.draw.rect(self.screen, [15, 0, 50],(j * self.square, i * self.square, int(self.square/1.5), int(self.square/1.5)))
+                    pygame.draw.rect(self.screen,[30, 20, 50],(j*self.square, i*self.square,self.square,self.square),math.floor(self.square/2))
+                    pygame.draw.rect(self.screen, [30, 20, 50],(j * self.square, i * self.square, int(self.square/1.5), int(self.square/1.5)))
                 elif self.gameBoard[i][j] == 1:
                     pygame.draw.circle(self.screen, [255, 255, 255], (j * self.square + self.square/2, i * self.square + self.square/2), self.square/15)
                 if self.gameBoard[i][j]==2:
                     pygame.draw.circle(self.screen, [0, 0, 0], (j * self.square + self.square / 2, i * self.square + self.square / 2), self.square / 5)
                 elif self.gameBoard[i][j] == 3:
                     pygame.draw.circle(self.screen, [204, 102, 0], (j * self.square + self.square/2, i * self.square + self.square/2),self.square/5)
-
-                if self.gameBoard[i][j] == 4 or self.gameBoard[i][j] == 5 or self.gameBoard[i][j] == 6 or self.gameBoard[i][j] == 7:
+                else:
                     self.g_pos.append([i, j])
         pygame.draw.circle(self.screen,[255,255,0],(math.floor(self.pacman[1]*self.square+self.square/2),math.floor(self.pacman[0]*self.square+self.square/2)),self.square/3)
         Font = pygame.font.SysFont('arial black', math.floor(self.square/2))
@@ -94,8 +119,6 @@ class PacMan:
         textRect = text.get_rect()
         textRect.center = (self.length / 2, self.width / 20)
         self.screen.blit(text, textRect)
-        self.make_ghosts()
-        pygame.display.flip()
         pygame.display.update()
 
     def winning(self):
@@ -131,8 +154,9 @@ class PacMan:
             textRect = text.get_rect()
             textRect.center = (self.length / 2, self.width / 5)
             self.screen.blit(text, textRect)
-            player = pygame.image.load(os.path.join("pacman_pic.png"))
-            self.screen.blit(player, (self.length/5, self.width/3))
+            if self.square>=35:
+                player = pygame.image.load(os.path.join("pacman_pic.png"))
+                self.screen.blit(player, (self.length/5, self.width/3))
             for event in pygame.event.get():
                 if event.type == KEYDOWN:
                     if event.key == K_ESCAPE:
@@ -177,6 +201,7 @@ class PacMan:
     ###########################DRAWING###########################
 
 def main():
+
     square = 35
     pacspeed=1/16
     from pygame.locals import (
@@ -200,8 +225,8 @@ def main():
         [0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, ],
         [0, 0, 0, 0, 0, 1, 0, 1, 1, 2, 2, 1, 1, 0, 1, 0, 0, 0, 0, 0, ],
         [0, 0, 0, 0, 0, 1, 1, 1, 0, 2, 2, 0, 1, 1, 1, 0, 0, 0, 0, 0, ],
-        [0, 0, 0, 0, 0, 1, 0, 1, 0, 4, 5, 0, 1, 0, 1, 0, 0, 0, 0, 0, ],
-        [0, 0, 0, 0, 0, 1, 0, 1, 0, 6, 7, 0, 1, 0, 1, 0, 0, 0, 0, 0, ],
+        [0, 0, 0, 0, 0, 1, 0, 1, 0, 2, 2, 0, 1, 0, 1, 0, 0, 0, 0, 0, ],
+        [0, 0, 0, 0, 0, 1, 0, 1, 0, 2, 2, 0, 1, 0, 1, 0, 0, 0, 0, 0, ],
         [0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, ],
         [0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, ],
         [0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, ],
@@ -226,9 +251,11 @@ def main():
     coinCount = 0
     req = 'up'
     user = PacMan(direction, gameBoard, square, screen, pacman,coinCount,length,width,pacspeed)
-    user.Intro_Render()
+    #user.Intro_Render()
+    user.make_Ghosts()
     while running:
         user.Board()
+        user.draw_Ghosts()
         for event in pygame.event.get():
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
@@ -248,20 +275,16 @@ def main():
         if req=='up':
             if (user.canMove(math.floor(pacman[0] - pacspeed), pacman[1]) and pacman[1]%1.0 ==0):
                 direction='up'
-            pacman[0],pacman[1]=user.move(direction, pacman[0],pacman[1])
         if req=='right':
             if (user.canMove(pacman[0], math.ceil(pacman[1] + pacspeed)) and pacman[0]%1.0 ==0):
                 direction='right'
-            pacman[0],pacman[1]=user.move(direction, pacman[0],pacman[1])
         if req=='left':
             if (user.canMove(pacman[0], math.floor(pacman[1] - pacspeed)) and pacman[0]%1.0 ==0):
                 direction='left'
-            pacman[0],pacman[1]=user.move(direction, pacman[0],pacman[1])
         if req=='down':
             if (user.canMove(math.ceil(pacman[0] + pacspeed), pacman[1]) and pacman[1]%1.0 ==0):
                 direction='down'
-            pacman[0],pacman[1]=user.move(direction, pacman[0],pacman[1])
-
+        pacman[0], pacman[1] = user.move(direction, pacman[0], pacman[1])
         if gameBoard[int(pacman[0])][int(pacman[1])] == 1:
             coinCount += 10
             print("The current coins:", coinCount)
@@ -277,10 +300,15 @@ def main():
             fruit_Sound = mixer.Sound('pacman_eatfruit.wav')
             fruit_Sound.set_volume(0.2)
             fruit_Sound.play()
-        if gameBoard[int(pacman[0])][int(pacman[1])] == 4 or gameBoard[int(pacman[0])][int(pacman[1])] == 5 or gameBoard[int(pacman[0])][int(pacman[1])] == 6 or gameBoard[int(pacman[0])][int(pacman[1])] == 7:
-            user.died_wait()
+        died=False
+        for gh in user.ghosts:
+            died = gh.ifTouched()
+            if died==True:
+                user.died_wait()
         if coinCount==1900:
             user.winning()
-        user = PacMan(direction, gameBoard, square, screen, pacman,coinCount,length,width,pacspeed)
+        user.setPacMan(pacman)
+        user.setCoinCount(coinCount)
+        user.setDirection(direction)
 if __name__ == '__main__':
     main()
