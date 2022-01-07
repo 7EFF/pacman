@@ -67,13 +67,13 @@ class PacMan:
         if direction == 'up':
             if self.canMove(math.floor(row - self.pacspeed), col) and col % 1.0 == 0:
                 row -= self.pacspeed
-        if direction == 'right':
+        elif direction == 'right':
             if self.canMove(row, math.ceil(col + self.pacspeed)) and row % 1.0 == 0:
                 col += self.pacspeed
-        if direction == 'left':
+        elif direction == 'left':
             if self.canMove(row, math.floor(col - self.pacspeed)) and row % 1.0 == 0:
                 col -= self.pacspeed
-        if direction == 'down':
+        else:
             if self.canMove(math.ceil(row + self.pacspeed), col) and col % 1.0 == 0:
                 row += self.pacspeed
         return row,col
@@ -89,7 +89,7 @@ class PacMan:
         pygame.display.update()
 
     def make_Ghosts(self):
-        self.ghosts = [Ghost(self, 11, 10, [0, 255, 0],self.pacman[0],self.pacman[1]), Ghost(self, 10, 10, [255, 150, 0],self.pacman[0],self.pacman[1]),Ghost(self, 11, 9, [0, 0, 255],self.pacman[0],self.pacman[1]), Ghost(self, 10, 9, [255, 0, 255],self.pacman[0],self.pacman[1])]
+        self.ghosts = [Ghost(self, 11, 10, [0, 255, 0],self.pacman[0],self.pacman[1]), Ghost(self, 10, 10, [255, 150, 0],self.pacman[0],self.pacman[1]),Ghost(self, 11, 9, [255, 0, 0],self.pacman[0],self.pacman[1]), Ghost(self, 10, 9, [100, 0, 150],self.pacman[0],self.pacman[1])]
         for gh in self.ghosts:
             gh.drawGhost()
         pygame.display.update()
@@ -103,18 +103,18 @@ class PacMan:
         for i in range(len(self.gameBoard[0])):
             for j in range(len(self.gameBoard[1])):
                 if self.gameBoard[i][j]== 0:
-                    pygame.draw.rect(self.screen,[30, 20, 50],(j*self.square, i*self.square,self.square,self.square),math.floor(self.square/2))
-                    pygame.draw.rect(self.screen, [30, 20, 50],(j * self.square, i * self.square, int(self.square/1.5), int(self.square/1.5)))
+                    pygame.draw.rect(self.screen,[0, 0, 77],(j*self.square, i*self.square,self.square,self.square),math.floor(self.square/2))
+                    pygame.draw.rect(self.screen, [100, 100, 180],(j * self.square, i * self.square, int(self.square/1.5), int(self.square/1.5)))
                 elif self.gameBoard[i][j] == 1:
                     pygame.draw.circle(self.screen, [255, 255, 255], (j * self.square + self.square/2, i * self.square + self.square/2), self.square/15)
-                if self.gameBoard[i][j]==2:
+                elif self.gameBoard[i][j]==2:
                     pygame.draw.circle(self.screen, [0, 0, 0], (j * self.square + self.square / 2, i * self.square + self.square / 2), self.square / 5)
                 elif self.gameBoard[i][j] == 3:
                     pygame.draw.circle(self.screen, [204, 102, 0], (j * self.square + self.square/2, i * self.square + self.square/2),self.square/5)
                 else:
                     self.g_pos.append([i, j])
         pygame.draw.circle(self.screen,[255,255,0],(math.floor(self.pacman[1]*self.square+self.square/2),math.floor(self.pacman[0]*self.square+self.square/2)),self.square/3)
-        Font = pygame.font.SysFont('arial black', math.floor(self.square/2))
+        Font = pygame.font.SysFont('arial black', math.floor(self.square/1.5))
         text = Font.render('COINS: {}'.format(self.coinCount), True, (255, 255, 0))
         textRect = text.get_rect()
         textRect.center = (self.length / 2, self.width / 20)
@@ -143,8 +143,6 @@ class PacMan:
             self.screen.blit(text, textRect)
             pygame.display.update()
 
-
-
     def Intro_Render(self):
         running = True
         while running:
@@ -168,9 +166,8 @@ class PacMan:
                         intro_sound.play()
                         for i in range(len(self.gameBoard[0])):
                             for j in range(len(self.gameBoard[1])):
-                                pygame.draw.rect(self.screen, [0, 0, 0],(j * self.square, i * self.square, self.square, self.square))
-                                pygame.draw.rect(self.screen, [15, 0, 50],(j * self.square, i * self.square, self.square, self.square),math.floor(self.square / 2))
-                                pygame.draw.rect(self.screen, [15, 0, 50], (j * self.square, i * self.square, int(self.square / 1.5), int(self.square / 1.5)))
+                                pygame.draw.rect(self.screen, [0, 0, 77],(j * self.square, i * self.square, self.square, self.square))
+                                pygame.draw.rect(self.screen, [100, 100, 180], (j * self.square, i * self.square, int(self.square / 1.5), int(self.square / 1.5)))
                             time.sleep(4/len(self.gameBoard[0]))
                             if i==len(self.gameBoard[0]):
                                 break
@@ -180,6 +177,7 @@ class PacMan:
                     pygame.quit()
                     sys.exit()
             pygame.display.update()
+
     def died_wait(self):
         while True:
             for event in pygame.event.get():
@@ -251,7 +249,7 @@ def main():
     coinCount = 0
     req = 'up'
     user = PacMan(direction, gameBoard, square, screen, pacman,coinCount,length,width,pacspeed)
-    #user.Intro_Render()
+    user.Intro_Render()
     user.make_Ghosts()
     while running:
         user.Board()
