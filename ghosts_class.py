@@ -22,7 +22,7 @@ class Ghost:
         self.direction='down'
 
     def ifTouched(self):
-        if self.row==self.main.pacman[0] and self.main.pacman[1]==self.col:
+        if int(self.row)==int(self.main.pacman[0]) and int(self.main.pacman[1])==int(self.col):
             return True
 
     def canMove(self,row,col):
