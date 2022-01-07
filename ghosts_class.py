@@ -31,16 +31,18 @@ class Ghost:
         return False
 
     def randDirection(self):
-        if self.canMove(math.ceil(self.row + self.ghostspeed), self.col) and self.col % 1.0 == 0:
-            self.direction = 'down'
-        if self.canMove(self.row, math.ceil(self.col + self.ghostspeed)) and self.row % 1.0 == 0:
-            self.direction='right'
-        if self.canMove(self.row, math.floor(self.col - self.ghostspeed)) and self.row % 1.0 == 0:
-            self.direction='left'
-        if self.canMove(math.floor(self.row - self.ghostspeed), self.col) and self.col % 1.0 == 0:
-            self.direction='up'
+        possibleTurn=[]
+        if self.canMove(math.floor(self.row - self.ghostspeed), self.col) and self.col % 1.0 == 0 and self.direction!='down':
+            possibleTurn.append('up')
+        if self.canMove(self.row, math.ceil(self.col + self.ghostspeed)) and self.row % 1.0 == 0 and self.direction!='left':
+            possibleTurn.append('right')
+        if self.canMove(self.row, math.floor(self.col - self.ghostspeed)) and self.row % 1.0 == 0 and self.direction!='right':
+            possibleTurn.append('left')
+        if self.canMove(math.ceil(self.row + self.ghostspeed), self.col) and self.col % 1.0 == 0 and self.direction!='up':
+            possibleTurn.append('down')
+        self.direction=random.choice(possibleTurn)
+        print(self.direction)
         self.move()
-
 
     def movementBehaves(self):
         if self.ghostBehave=='Random':
@@ -48,13 +50,17 @@ class Ghost:
 
     def move(self):
         if self.direction == 'up':
-            self.row -= self.ghostspeed
-        if self.direction == 'right':
-            self.col += self.ghostspeed
-        if self.direction == 'left':
-            self. col -= self.ghostspeed
-        if self.direction == 'down':
-            self. row += self.ghostspeed
+            if self.canMove(math.floor(self.row - self.ghostspeed), self.col) and self.col % 1.0 == 0:
+                self.row -= self.ghostspeed
+        elif self.direction == 'right':
+            if self.canMove(self.row, math.ceil(self.col + self.ghostspeed)) and self.row % 1.0 == 0:
+                self.col += self.ghostspeed
+        elif self.direction == 'left':
+            if self.canMove(self.row, math.floor(self.col - self.ghostspeed)) and self.row % 1.0 == 0:
+                self. col -= self.ghostspeed
+        elif self.direction == 'down':
+            if self.canMove(math.ceil(self.row + self.ghostspeed), self.col) and self.col % 1.0 == 0:
+                self. row += self.ghostspeed
         pygame.display.update()
 
     def drawGhost(self):
