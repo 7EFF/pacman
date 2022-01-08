@@ -34,24 +34,6 @@ class PacMan:
     def setCoinCount(self,coinCount):
         self.coinCount=coinCount
 
-    def setGameBoard(self,gameBoard):
-        self.gameBoard = gameBoard
-
-    def setScreen(self,screen):
-        self.screen = screen
-
-    def setSquare(self,square):
-        self.square = square
-
-    def setLength(self,length):
-        self.length = length
-
-    def setWidth(self,width):
-        self.width=width
-
-    def pacspeed(self,pacspeed):
-        self.pacspeed=pacspeed
-
     ###########################SET & GET###########################
 
 
@@ -81,6 +63,12 @@ class PacMan:
     ###########################MOVEMENT###########################
 
     ###########################GHOSTS###########################
+
+    def fruitEaten(self):
+        for gh in self.ghosts:
+            gh.drawGhost()
+            gh.fruitEaten()
+        pygame.display.update()
 
     def draw_Ghosts(self):
         for gh in self.ghosts:
@@ -179,6 +167,9 @@ class PacMan:
             pygame.display.update()
 
     def died_wait(self):
+        fruit_Sound = mixer.Sound('pacman_death.wav')
+        fruit_Sound.set_volume(0.2)
+        fruit_Sound.play()
         while True:
             for event in pygame.event.get():
                 if event.type == KEYDOWN:
@@ -296,14 +287,18 @@ def main():
             print("The current coins:", coinCount)
             gameBoard[int(pacman[0])][int(pacman[1])] = 2
             fruit_Sound = mixer.Sound('pacman_eatfruit.wav')
-            fruit_Sound.set_volume(0.2)
+            fruit_Sound.set_volume(0.25)
             fruit_Sound.play()
-        died=False
+            user.fruitEaten()
         for gh in user.ghosts:
             died = gh.ifTouched()
-            if died==True:
+            if died=='died':
                 user.died_wait()
-        if coinCount==1900:
+            if died=='eaten':
+                gh.eatenBlue()
+                coinCount+=400
+                print("The current coins:", coinCount)
+        if coinCount>2500:
             user.winning()
         user.setPacMan(pacman)
         user.setCoinCount(coinCount)
