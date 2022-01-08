@@ -17,13 +17,18 @@ class Ghost:
         self.colour=colour
         self.pacmanRow = pacmanRow
         self.pacmanCol=pacmanCol
+        self.ogrow=row
+        self.ogcol=col
+        self.ogcolour = colour
         self.ghostspeed=1/32
         self.ghostBehave='Random'
         self.direction='down'
 
     def ifTouched(self):
-        if int(self.row)==int(self.main.pacman[0]) and int(self.main.pacman[1])==int(self.col):
-            return True
+        if math.floor(self.row)==math.floor(self.main.pacman[0]) and math.floor(self.main.pacman[1])==math.floor(self.col) and self.colour!=[0,0,255]:
+            return 'died'
+        if math.floor(self.row)==math.floor(self.main.pacman[0]) and math.floor(self.main.pacman[1])==math.floor(self.col) and self.colour==[0,0,255]:
+            return 'eaten'
 
     def canMove(self,row,col):
         if self.main.gameBoard[int(row)][int(col)]!=0:
@@ -41,7 +46,6 @@ class Ghost:
         if self.canMove(math.ceil(self.row + self.ghostspeed), self.col) and self.col % 1.0 == 0 and self.direction!='up':
             possibleTurn.append('down')
         self.direction=random.choice(possibleTurn)
-        print(self.direction)
         self.move()
 
     def movementBehaves(self):
@@ -62,6 +66,20 @@ class Ghost:
             if self.canMove(math.ceil(self.row + self.ghostspeed), self.col) and self.col % 1.0 == 0:
                 self. row += self.ghostspeed
         pygame.display.update()
+
+    def getColour(self):
+        return self.colour
+
+    def fruitEaten(self):
+        self.colour = [0, 0, 255]
+        self.movementBehaves()
+        self.ghostspeed=1/64
+
+    def eatenBlue(self):
+        self.row = self.ogrow
+        self.col = self.ogcol
+        self.colour = self.ogcolour
+        self.ghostspeed = 1 / 32
 
     def drawGhost(self):
         pygame.draw.circle(self.main.screen, self.colour, (math.floor(self.col* self.main.square + self.main.square/2),math.floor(self.row* self.main.square + self.main.square/2)),self.main.square / 4)
