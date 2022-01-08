@@ -22,13 +22,16 @@ class Ghost:
         self.ogcolour = colour
         self.ghostspeed=1/32
         self.ghostBehave='Random'
-        self.direction='down'
+        self.direction='up'
+        self.died=False
 
     def ifTouched(self):
-        if math.floor(self.row)==math.floor(self.main.pacman[0]) and math.floor(self.main.pacman[1])==math.floor(self.col) and self.colour!=[0,0,255]:
+        if math.floor(self.row)==math.floor(self.main.pacman[0]) and math.floor(self.main.pacman[1])==math.floor(self.col) and self.main.eatGhosts==False:
             return 'died'
-        if math.floor(self.row)==math.floor(self.main.pacman[0]) and math.floor(self.main.pacman[1])==math.floor(self.col) and self.colour==[0,0,255]:
+        if math.floor(self.row)==math.floor(self.main.pacman[0]) and math.floor(self.main.pacman[1])==math.floor(self.col) and self.main.eatGhosts==True and self.died==False:
             return 'eaten'
+        if math.floor(self.row) == math.floor(self.main.pacman[0]) and math.floor(self.main.pacman[1]) == math.floor(self.col) and self.died==True:
+            return 'died'
 
     def canMove(self,row,col):
         if self.main.gameBoard[int(row)][int(col)]!=0:
@@ -45,7 +48,8 @@ class Ghost:
             possibleTurn.append('left')
         if self.canMove(math.ceil(self.row + self.ghostspeed), self.col) and self.col % 1.0 == 0 and self.direction!='up':
             possibleTurn.append('down')
-        self.direction=random.choice(possibleTurn)
+        if len(possibleTurn)>=1:
+            self.direction=random.choice(possibleTurn)
         self.move()
 
     def movementBehaves(self):
@@ -80,6 +84,18 @@ class Ghost:
         self.col = self.ogcol
         self.colour = self.ogcolour
         self.ghostspeed = 1 / 32
+        self.died=True
+
+    def flickerToOG(self):
+        self.colour = self.ogcolour
+
+    def flickerToBLUE(self):
+        self.colour = [0,0,255]
+
+    def blueOver(self):
+        self.colour = self.ogcolour
+        self.ghostspeed = 1 / 32
+        self.died=True
 
     def drawGhost(self):
         pygame.draw.circle(self.main.screen, self.colour, (math.floor(self.col* self.main.square + self.main.square/2),math.floor(self.row* self.main.square + self.main.square/2)),self.main.square / 4)
