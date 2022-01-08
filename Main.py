@@ -10,7 +10,7 @@ pygame.mixer.init()
 from ghosts_class import *
 
 class PacMan:
-    def __init__(self,direction,gameBoard,square,screen,pacman,coinCount,length,width,pacspeed):
+    def __init__(self,direction,gameBoard,square,screen,pacman,coinCount,length,width,pacspeed,eatGhosts):
         self.direction=direction
         self.gameBoard = gameBoard
         self.square=square
@@ -22,6 +22,7 @@ class PacMan:
         self.g_pos=[]
         self.pacspeed=pacspeed
         self.ghosts = []
+        self.eatGhosts=eatGhosts
 
     ###########################SET & GET###########################
 
@@ -33,6 +34,9 @@ class PacMan:
 
     def setCoinCount(self,coinCount):
         self.coinCount=coinCount
+
+    def setEatGhosts(self,eatGhost):
+        self.eatGhosts=eatGhost
 
     ###########################SET & GET###########################
 
@@ -239,8 +243,10 @@ def main():
     running = True
     coinCount = 0
     req = 'up'
-    user = PacMan(direction, gameBoard, square, screen, pacman,coinCount,length,width,pacspeed)
-    user.Intro_Render()
+    blueCounter=0
+    eatGhosts=False
+    user = PacMan(direction, gameBoard, square, screen, pacman,coinCount,length,width,pacspeed,eatGhosts)
+    #user.Intro_Render()
     user.make_Ghosts()
     while running:
         user.Board()
@@ -290,6 +296,8 @@ def main():
             fruit_Sound.set_volume(0.25)
             fruit_Sound.play()
             user.fruitEaten()
+            eatGhosts=True
+            blueCounter=0
         for gh in user.ghosts:
             died = gh.ifTouched()
             if died=='died':
@@ -298,10 +306,27 @@ def main():
                 gh.eatenBlue()
                 coinCount+=400
                 print("The current coins:", coinCount)
-        if coinCount>2500:
+                eat_ghost = mixer.Sound('pacman_eatghost.wav')
+                eat_ghost.set_volume(0.3)
+                eat_ghost.play()
+        if eatGhosts:
+            if blueCounter==1000:
+                for gh in user.ghosts:
+                    gh.blueOver()
+                blueCounter=0
+                eatGhosts=False
+            if blueCounter >= 900 and blueCounter % 20 == 0:
+                for gh in user.ghosts:
+                    gh.flickerToBLUE()
+            if blueCounter >= 900 and blueCounter % 20 == 10:
+                for gh in user.ghosts:
+                    gh.flickerToOG()
+            blueCounter+=1
+        if coinCount>4000:
             user.winning()
         user.setPacMan(pacman)
         user.setCoinCount(coinCount)
         user.setDirection(direction)
+        user.setEatGhosts(eatGhosts)
 if __name__ == '__main__':
     main()
