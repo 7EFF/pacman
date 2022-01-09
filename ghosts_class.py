@@ -78,6 +78,7 @@ class Ghost:
         self.colour = [0, 0, 255]
         self.movementBehaves()
         self.ghostspeed=1/64
+        self.died=False
 
     def eatenBlue(self):
         self.row = self.ogrow
@@ -92,10 +93,12 @@ class Ghost:
     def flickerToBLUE(self):
         self.colour = [0,0,255]
 
+    def getDied(self):
+        return self.died
+
     def blueOver(self):
         self.colour = self.ogcolour
         self.ghostspeed = 1 / 32
-        self.died=True
 
     def drawGhost(self):
         pygame.draw.circle(self.main.screen, self.colour, (math.floor(self.col* self.main.square + self.main.square/2),math.floor(self.row* self.main.square + self.main.square/2)),self.main.square / 4)
