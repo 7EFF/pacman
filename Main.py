@@ -312,16 +312,16 @@ def main():
                 eat_ghost.set_volume(0.3)
                 eat_ghost.play()
         if eatGhosts:
-            if blueCounter==1000:
+            if blueCounter==900:
                 for gh in user.ghosts:
                     gh.blueOver()
                 blueCounter=0
                 eatGhosts=False
-            if blueCounter >= 900 and blueCounter % 20 == 0:
+            if blueCounter >= 700 and blueCounter % 40 == 0:
                 for gh in user.ghosts:
                     if gh.getDied()==False:
                         gh.flickerToBLUE()
-            if blueCounter >= 900 and blueCounter % 20 == 10:
+            if blueCounter >= 700 and blueCounter % 40 == 20:
                 for gh in user.ghosts:
                     gh.flickerToOG()
             blueCounter+=1
