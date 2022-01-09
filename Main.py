@@ -213,7 +213,7 @@ def main():
         [0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, ],
         [0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, ],
         [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, ],
-        [0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, ],
+        [0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, ],
         [0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, ],
         [0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, ],
         [0, 0, 0, 0, 0, 1, 0, 1, 1, 2, 2, 1, 1, 0, 1, 0, 0, 0, 0, 0, ],
@@ -234,6 +234,8 @@ def main():
         #4=מטסעות גדולים
         #5,6,7,8=רוחות לפי מספרים
     ]
+    print (len(gameBoard[0])," width")
+    print (len(gameBoard[1]), " length")
     [length, width] = [len(gameBoard[0]) * square, len(gameBoard[1]) * square]
     screen = pygame.display.set_mode((width, length))
     pygame.display.flip()
@@ -246,7 +248,7 @@ def main():
     blueCounter=0
     eatGhosts=False
     user = PacMan(direction, gameBoard, square, screen, pacman,coinCount,length,width,pacspeed,eatGhosts)
-    #user.Intro_Render()
+    user.Intro_Render()
     user.make_Ghosts()
     while running:
         user.Board()
@@ -317,7 +319,8 @@ def main():
                 eatGhosts=False
             if blueCounter >= 900 and blueCounter % 20 == 0:
                 for gh in user.ghosts:
-                    gh.flickerToBLUE()
+                    if gh.getDied()==False:
+                        gh.flickerToBLUE()
             if blueCounter >= 900 and blueCounter % 20 == 10:
                 for gh in user.ghosts:
                     gh.flickerToOG()
