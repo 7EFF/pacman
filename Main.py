@@ -19,7 +19,6 @@ class PacMan:
         self.coinCount=coinCount
         self.length=length
         self.width=width
-        self.g_pos=[]
         self.pacspeed=pacspeed
         self.ghosts = []
         self.eatGhosts=eatGhosts
@@ -231,8 +230,7 @@ def main():
         #1=מקום עם מטבעות
         #0=קיר שאי אפשר לעבור
         #2=מקום שאפשר ללכת בוא אבל בלי מטבעות
-        #4=מטסעות גדולים
-        #5,6,7,8=רוחות לפי מספרים
+        #3=מטסעות גדולים
     ]
     print (len(gameBoard[0])," width")
     print (len(gameBoard[1]), " length")
