@@ -246,7 +246,7 @@ def main():
     blueCounter=0
     eatGhosts=False
     user = PacMan(direction, gameBoard, square, screen, pacman,coinCount,length,width,pacspeed,eatGhosts)
-    user.Intro_Render()
+    #user.Intro_Render()
     user.make_Ghosts()
     while running:
         user.Board()
@@ -282,7 +282,6 @@ def main():
         pacman[0], pacman[1] = user.move(direction, pacman[0], pacman[1])
         if gameBoard[int(pacman[0])][int(pacman[1])] == 1:
             coinCount += 10
-            print("The current coins:", coinCount)
             gameBoard[int(pacman[0])][int(pacman[1])] = 2
             if pygame.mixer.get_busy()==False:
                 eating_Sound= mixer.Sound('pacman_chomp.wav')
@@ -305,7 +304,6 @@ def main():
             if died=='eaten':
                 gh.eatenBlue()
                 coinCount+=400
-                print("The current coins:", coinCount)
                 eat_ghost = mixer.Sound('pacman_eatghost.wav')
                 eat_ghost.set_volume(0.3)
                 eat_ghost.play()
