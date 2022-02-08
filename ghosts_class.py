@@ -20,7 +20,7 @@ class Ghost:
         self.ogrow=row
         self.ogcol=col
         self.ogcolour = colour
-        self.ghostspeed=1/32
+        self.ghostspeed=1/64
         self.ghostBehave='Random'
         self.direction='up'
         self.died=False
@@ -69,7 +69,6 @@ class Ghost:
         elif self.direction == 'down':
             if self.canMove(math.ceil(self.row + self.ghostspeed), self.col) and self.col % 1.0 == 0:
                 self. row += self.ghostspeed
-        pygame.display.update()
 
     def getColour(self):
         return self.colour
@@ -77,14 +76,14 @@ class Ghost:
     def fruitEaten(self):
         self.colour = [0, 0, 255]
         self.movementBehaves()
-        self.ghostspeed=1/64
+        self.ghostspeed=1/128
         self.died=False
 
     def eatenBlue(self):
         self.row = self.ogrow
         self.col = self.ogcol
         self.colour = self.ogcolour
-        self.ghostspeed = 1 / 32
+        self.ghostspeed = 1 / 64
         self.died=True
 
     def flickerToOG(self):
