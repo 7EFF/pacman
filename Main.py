@@ -102,8 +102,6 @@ class PacMan:
                     pygame.draw.circle(self.screen, [0, 0, 0], (j * self.square + self.square / 2, i * self.square + self.square / 2), self.square / 5)
                 elif self.gameBoard[i][j] == 3:
                     pygame.draw.circle(self.screen, [204, 102, 0], (j * self.square + self.square/2, i * self.square + self.square/2),self.square/5)
-                else:
-                    self.g_pos.append([i, j])
         pygame.draw.circle(self.screen,[255,255,0],(math.floor(self.pacman[1]*self.square+self.square/2),math.floor(self.pacman[0]*self.square+self.square/2)),self.square/3)
         Font = pygame.font.SysFont('arial black', math.floor(self.square/1.5))
         text = Font.render('COINS: {}'.format(self.coinCount), True, (255, 255, 0))
@@ -245,6 +243,7 @@ def main():
     req = 'up'
     blueCounter=0
     eatGhosts=False
+    pacspeed=1/32
     user = PacMan(direction, gameBoard, square, screen, pacman,coinCount,length,width,pacspeed,eatGhosts)
     #user.Intro_Render()
     user.make_Ghosts()
