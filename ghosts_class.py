@@ -69,7 +69,6 @@ class Ghost:
         elif self.direction == 'down':
             if self.canMove(math.ceil(self.row + self.ghostspeed), self.col) and self.col % 1.0 == 0:
                 self. row += self.ghostspeed
-        pygame.display.update()
 
     def getColour(self):
         return self.colour
