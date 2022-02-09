@@ -134,7 +134,7 @@ class PacMan:
             self.screen.blit(text, textRect)
             pygame.display.update()
 
-    def Intro_Render(self,background):
+    def Intro_Render(self):
         running = True
         while running:
             self.screen.fill((0, 0, 0))
@@ -143,10 +143,12 @@ class PacMan:
             textRect = text.get_rect()
             textRect.center = (self.length / 2, self.width / 5)
             self.screen.blit(text, textRect)
-            if self.square>=35:
-                player = pygame.image.load(os.path.join("pacman_pic.png"))
-                background = pygame.transform.scale(player, (self.width, self.length))
-                self.screen.blit(player, (self.length/5, self.width/3))
+            player = pygame.image.load(os.path.join("pacman_pic.png"))
+            self.screen.blit(player, (5*self.square, 5*self.square))
+            text = Font.render('PRESS SPACE TO START', True, (255, 0, 0))
+            textRect = text.get_rect()
+            textRect.center = (14*self.square, 3*self.square)
+            self.screen.blit(text, textRect)
             for event in pygame.event.get():
                 if event.type == KEYDOWN:
                     if event.key == K_ESCAPE:
@@ -244,8 +246,6 @@ def main():
         # 2=מקום שאפשר ללכת בוא אבל בלי מטבעות
         # 4=מטסעות גדולים
     ]
-    print (len(gameBoard[0])," width")
-    print (len(gameBoard[1]), " length")
     [length, width] = [31 * square, 28 * square]
     screen = pygame.display.set_mode((width, length))
     pygame.display.flip()
@@ -260,7 +260,7 @@ def main():
     background = pygame.image.load('background.png')
     background = pygame.transform.scale(background, (width, length))
     user = PacMan(direction, gameBoard, square, screen, pacman,coinCount,length,width,pacspeed,eatGhosts)
-    #user.Intro_Render(background)
+    user.Intro_Render()
     user.make_Ghosts()
     while running:
         user.Board(background)
