@@ -45,7 +45,8 @@ class PacMan:
 
     def canMove(self,row,col):
         if self.gameBoard[int(row)][int(col)]!=0:
-            return True
+            if self.gameBoard[int(row)][int(col)]!=7:
+                return True
         return False
 
 
@@ -107,7 +108,7 @@ class PacMan:
         Font = pygame.font.SysFont('arial black', math.floor(self.square/1.5))
         text = Font.render('COINS: {}'.format(self.coinCount), True, (255, 255, 0))
         textRect = text.get_rect()
-        textRect.center = (self.length / 2, self.width / 20)
+        textRect.center = (2*self.square, 15*self.square)
         self.screen.blit(text, textRect)
         pygame.display.update()
 
@@ -133,7 +134,7 @@ class PacMan:
             self.screen.blit(text, textRect)
             pygame.display.update()
 
-    def Intro_Render(self):
+    def Intro_Render(self,background):
         running = True
         while running:
             self.screen.fill((0, 0, 0))
@@ -144,6 +145,7 @@ class PacMan:
             self.screen.blit(text, textRect)
             if self.square>=35:
                 player = pygame.image.load(os.path.join("pacman_pic.png"))
+                background = pygame.transform.scale(player, (self.width, self.length))
                 self.screen.blit(player, (self.length/5, self.width/3))
             for event in pygame.event.get():
                 if event.type == KEYDOWN:
@@ -156,8 +158,8 @@ class PacMan:
                         intro_sound.play()
                         for i in range(len(self.gameBoard[0])):
                             for j in range(len(self.gameBoard[1])):
-                                pygame.draw.rect(self.screen, [0, 0, 77],(j * self.square, i * self.square, self.square, self.square))
-                                pygame.draw.rect(self.screen, [100, 100, 180], (j * self.square, i * self.square, int(self.square / 1.5), int(self.square / 1.5)))
+                                pygame.draw.rect(self.screen, [0, 0, 0],(j * self.square, i * self.square, self.square, self.square))
+                                pygame.draw.rect(self.screen, [0, 0, 77], (j * self.square, i * self.square, int(self.square / 1.5), int(self.square / 1.5)))
                             time.sleep(4/len(self.gameBoard[0]))
                             if i==len(self.gameBoard[0]):
                                 break
@@ -217,8 +219,8 @@ def main():
         [0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0,0,0,],
         [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
         [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
-        [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 7, 7, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
-        [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 2, 2, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
+        [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 2, 2, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
+        [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 7, 7, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
         [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 2, 2, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
         [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
         [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
@@ -258,7 +260,7 @@ def main():
     background = pygame.image.load('background.png')
     background = pygame.transform.scale(background, (width, length))
     user = PacMan(direction, gameBoard, square, screen, pacman,coinCount,length,width,pacspeed,eatGhosts)
-    #user.Intro_Render()
+    #user.Intro_Render(background)
     user.make_Ghosts()
     while running:
         user.Board(background)
