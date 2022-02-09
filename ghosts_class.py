@@ -1,9 +1,5 @@
-import pygame,sys,os
-import time
+import pygame
 import math
-from math import radians
-from pygame import mixer
-from pygame.locals import *
 import random
 pygame.init()
 pygame.font.init()
@@ -20,7 +16,7 @@ class Ghost:
         self.ogrow=row
         self.ogcol=col
         self.ogcolour = colour
-        self.ghostspeed=1/32
+        self.ghostspeed=1/128
         self.ghostBehave='Random'
         self.direction='up'
         self.died=False
@@ -76,14 +72,14 @@ class Ghost:
     def fruitEaten(self):
         self.colour = [0, 0, 255]
         self.movementBehaves()
-        self.ghostspeed=1/64
+        self.ghostspeed=1/256
         self.died=False
 
     def eatenBlue(self):
         self.row = self.ogrow
         self.col = self.ogcol
         self.colour = self.ogcolour
-        self.ghostspeed = 1 / 32
+        self.ghostspeed = 1 / 128
         self.died=True
 
     def flickerToOG(self):
@@ -97,7 +93,7 @@ class Ghost:
 
     def blueOver(self):
         self.colour = self.ogcolour
-        self.ghostspeed = 1 / 32
+        self.ghostspeed = 1 / 128
 
     def drawGhost(self):
         pygame.draw.circle(self.main.screen, self.colour, (math.floor(self.col* self.main.square + self.main.square/2),math.floor(self.row* self.main.square + self.main.square/2)),self.main.square / 4)
