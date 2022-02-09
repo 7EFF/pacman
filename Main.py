@@ -1,7 +1,5 @@
 import pygame,sys,os
 import time
-import math
-from math import radians
 from pygame import mixer
 from pygame.locals import *
 pygame.init()
@@ -79,7 +77,7 @@ class PacMan:
         for gh in self.ghosts:
             gh.drawGhost()
             gh.movementBehaves()
-        pygame.display.update()
+        #pygame.display.update()
 
     def make_Ghosts(self):
         self.ghosts = [Ghost(self, 13, 14, [0, 255, 0],self.pacman[0],self.pacman[1]), Ghost(self, 12, 13, [255, 150, 0],self.pacman[0],self.pacman[1]),Ghost(self, 12, 14, [255, 0, 0],self.pacman[0],self.pacman[1]), Ghost(self, 13, 13, [100, 0, 150],self.pacman[0],self.pacman[1])]
@@ -110,6 +108,7 @@ class PacMan:
         textRect = text.get_rect()
         textRect.center = (2*self.square, 15*self.square)
         self.screen.blit(text, textRect)
+        self.draw_Ghosts()
         pygame.display.update()
 
     def winning(self):
@@ -198,7 +197,9 @@ class PacMan:
 def main():
 
     square = 25
-    pacspeed=1/16
+    pacspeed=1/64
+    clock = pygame.time.Clock()
+    clock.tick(30)
     from pygame.locals import (
         K_UP,
         K_DOWN,
@@ -248,7 +249,6 @@ def main():
     ]
     [length, width] = [31 * square, 28 * square]
     screen = pygame.display.set_mode((width, length))
-    pygame.display.flip()
     pacman = [1, 1]
     pygame.display.set_caption("PacMan-Final Project")
     direction = 'up'
@@ -257,14 +257,13 @@ def main():
     req = 'up'
     blueCounter=0
     eatGhosts=False
-    background = pygame.image.load('background.png')
+    background = pygame.image.load('background.png').convert()
     background = pygame.transform.scale(background, (width, length))
     user = PacMan(direction, gameBoard, square, screen, pacman,coinCount,length,width,pacspeed,eatGhosts)
     user.Intro_Render()
     user.make_Ghosts()
     while running:
         user.Board(background)
-        user.draw_Ghosts()
         for event in pygame.event.get():
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
@@ -324,16 +323,16 @@ def main():
                 eat_ghost.set_volume(0.3)
                 eat_ghost.play()
         if eatGhosts:
-            if blueCounter==900:
+            if blueCounter==2000:
                 for gh in user.ghosts:
                     gh.blueOver()
                 blueCounter=0
                 eatGhosts=False
-            if blueCounter >= 700 and blueCounter % 40 == 0:
+            if blueCounter >= 1600 and blueCounter % 80 == 0:
                 for gh in user.ghosts:
                     if gh.getDied()==False:
                         gh.flickerToBLUE()
-            if blueCounter >= 700 and blueCounter % 40 == 20:
+            if blueCounter >= 1600 and blueCounter % 80 == 40:
                 for gh in user.ghosts:
                     gh.flickerToOG()
             blueCounter+=1
