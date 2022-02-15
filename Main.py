@@ -8,7 +8,7 @@ pygame.mixer.init()
 from ghosts_class import *
 
 class PacMan:
-    def __init__(self,direction,gameBoard,square,screen,pacman,coinCount,length,width,pacspeed,eatGhosts):
+    def __init__(self,direction,gameBoard,square,screen,pacman,coinCount,length,width,pacspeed,eatGhosts,mouthChange):
         self.direction=direction
         self.gameBoard = gameBoard
         self.square=square
@@ -21,8 +21,12 @@ class PacMan:
         self.pacspeed=pacspeed
         self.ghosts = []
         self.eatGhosts=eatGhosts
+        self.mouthChange=mouthChange
 
     ###########################SET & GET###########################
+
+    def setMouthChange(self,mouthChange):
+        self.mouthChange=mouthChange
 
     def setDirection(self,direction):
         self.direction=direction
@@ -52,15 +56,19 @@ class PacMan:
         if direction == 'up':
             if self.canMove(math.floor(row - self.pacspeed), col) and col % 1.0 == 0:
                 row -= self.pacspeed
+                self.setMouthChange(self.mouthChange + 1)
         elif direction == 'right':
             if self.canMove(row, math.ceil(col + self.pacspeed)) and row % 1.0 == 0:
                 col += self.pacspeed
+                self.setMouthChange(self.mouthChange + 1)
         elif direction == 'left':
             if self.canMove(row, math.floor(col - self.pacspeed)) and row % 1.0 == 0:
                 col -= self.pacspeed
+                self.setMouthChange(self.mouthChange + 1)
         else:
             if self.canMove(math.ceil(row + self.pacspeed), col) and col % 1.0 == 0:
                 row += self.pacspeed
+                self.setMouthChange(self.mouthChange + 1)
         return row,col
 
     ###########################MOVEMENT###########################
@@ -71,7 +79,7 @@ class PacMan:
         for gh in self.ghosts:
             gh.drawGhost()
             gh.fruitEaten()
-        pygame.display.update()
+        #pygame.display.update()
 
     def draw_Ghosts(self):
         for gh in self.ghosts:
@@ -83,7 +91,7 @@ class PacMan:
         self.ghosts = [Ghost(self, 13, 14, [0, 255, 0],self.pacman[0],self.pacman[1]), Ghost(self, 12, 13, [255, 150, 0],self.pacman[0],self.pacman[1]),Ghost(self, 12, 14, [255, 0, 0],self.pacman[0],self.pacman[1]), Ghost(self, 13, 13, [100, 0, 150],self.pacman[0],self.pacman[1])]
         for gh in self.ghosts:
             gh.drawGhost()
-        pygame.display.update()
+        #pygame.display.update()
 
     ###########################GHOSTS###########################
 
@@ -102,7 +110,23 @@ class PacMan:
                     pygame.draw.circle(self.screen, [204, 102, 0], (j * self.square + self.square/2, i * self.square + self.square/2),self.square/5)
                 else:
                     self.g_pos.append([i, j])
-        pygame.draw.circle(self.screen,[255,255,0],(math.floor(self.pacman[1]*self.square+self.square/2),math.floor(self.pacman[0]*self.square+self.square/2)),self.square/3)
+        if self.direction == 'left' and 50 <= self.mouthChange % 100 < 100:
+            pac_Pic = pygame.image.load('pacman_small_left.png').convert()
+        elif self.direction == 'left' and self.mouthChange % 100 < 50:
+                pac_Pic = pygame.image.load('pacman_big_left.png').convert()
+        elif self.direction == 'right' and 50<=self.mouthChange%100<100:
+            pac_Pic = pygame.image.load('pacman_small_right.png').convert()
+        elif self.direction == 'right' and self.mouthChange%100<50:
+            pac_Pic = pygame.image.load('pacman_big_right.png').convert()
+        elif self.direction == 'down' and 50 <= self.mouthChange % 100 < 100:
+            pac_Pic = pygame.image.load('pacman_small_down.png').convert()
+        elif self.direction == 'down' and self.mouthChange % 100 < 50:
+            pac_Pic = pygame.image.load('pacman_big_down.png').convert()
+        elif self.direction == 'up' and 50 <= self.mouthChange % 100 < 100:
+            pac_Pic = pygame.image.load('pacman_big_up.png').convert()
+        else:
+            pac_Pic = pygame.image.load('pacman_small_up.png').convert()
+        self.screen.blit(pac_Pic,(math.floor(self.pacman[1]*self.square),math.floor(self.pacman[0]*self.square)))
         Font = pygame.font.SysFont('arial black', math.floor(self.square/1.5))
         text = Font.render('COINS: {}'.format(self.coinCount), True, (255, 255, 0))
         textRect = text.get_rect()
@@ -198,8 +222,8 @@ def main():
 
     square = 25
     pacspeed=1/64
-    clock = pygame.time.Clock()
-    clock.tick(30)
+    '''clock = pygame.time.Clock()
+    clock.tick(30)'''
     from pygame.locals import (
         K_UP,
         K_DOWN,
@@ -212,9 +236,9 @@ def main():
 
     gameBoard = [
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0,0,],
-        [0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,0,0,],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,0,0,],
         [0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,0,0,],
-        [0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,0,0,],
+        [0, 3, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,0,0,],
         [0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,0,0,],
         [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,0,0,],
         [0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,0,0,],
@@ -223,7 +247,7 @@ def main():
         [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
         [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
         [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 2, 2, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
-        [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 7, 7, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
+        [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 4, 4, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
         [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 2, 2, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
         [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
         [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
@@ -234,7 +258,7 @@ def main():
         [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,0,0,],
         [0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,0,0,],
         [0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,0,0,],
-        [0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 3, 0, 0,0,0,],
+        [0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 3, 0, 0,0,0,],
         [0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0,0,0,],
         [0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0,0,0,],
         [0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0,0,0,],
@@ -245,11 +269,12 @@ def main():
         # 0=קיר שאי אפשר לעבור
         # 1=מטבע
         # 2=מקום שאפשר ללכת בוא אבל בלי מטבעות
-        # 4=מטסעות גדולים
+        # 3=מטסעות גדולים
+        #4=מקום שרק רוחות עוברות בו
     ]
     [length, width] = [31 * square, 28 * square]
     screen = pygame.display.set_mode((width, length))
-    pacman = [1, 1]
+    pacman = [23, 13.5]
     pygame.display.set_caption("PacMan-Final Project")
     direction = 'up'
     running = True
@@ -259,8 +284,9 @@ def main():
     eatGhosts=False
     background = pygame.image.load('background.png').convert()
     background = pygame.transform.scale(background, (width, length))
-    user = PacMan(direction, gameBoard, square, screen, pacman,coinCount,length,width,pacspeed,eatGhosts)
-    user.Intro_Render()
+    mouthChange=0
+    user = PacMan(direction, gameBoard, square, screen, pacman,coinCount,length,width,pacspeed,eatGhosts,mouthChange)
+    #user.Intro_Render()
     user.make_Ghosts()
     while running:
         user.Board(background)
@@ -298,13 +324,13 @@ def main():
             gameBoard[int(pacman[0])][int(pacman[1])] = 2
             if pygame.mixer.get_busy()==False:
                 eating_Sound= mixer.Sound('pacman_chomp.wav')
-                eating_Sound.set_volume(0.2)
+                eating_Sound.set_volume(0.5)
                 eating_Sound.play()
         if gameBoard[int(pacman[0])][int(pacman[1])] == 3:
             coinCount+= 200
             gameBoard[int(pacman[0])][int(pacman[1])] = 2
             fruit_Sound = mixer.Sound('pacman_eatfruit.wav')
-            fruit_Sound.set_volume(0.25)
+            fruit_Sound.set_volume(0.6)
             fruit_Sound.play()
             user.fruitEaten()
             eatGhosts=True
@@ -320,7 +346,7 @@ def main():
                 gh.eatenBlue()
                 coinCount+=400
                 eat_ghost = mixer.Sound('pacman_eatghost.wav')
-                eat_ghost.set_volume(0.3)
+                eat_ghost.set_volume(0.6)
                 eat_ghost.play()
         if eatGhosts:
             if blueCounter==2000:
