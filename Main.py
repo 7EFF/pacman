@@ -1,4 +1,4 @@
-import pygame,sys,os
+import sys,os,pygame
 import time
 from pygame import mixer
 from pygame.locals import *
@@ -97,6 +97,25 @@ class PacMan:
 
     ###########################DRAWING###########################
 
+    def pacAnimation(self):
+        if self.direction == 'left' and 50 <= self.mouthChange % 100 < 100:
+            pac_Pic = pygame.image.load('pacman_small_left.png').convert_alpha()
+        elif self.direction == 'left' and self.mouthChange % 100 < 50:
+                pac_Pic = pygame.image.load('pacman_big_left.png').convert_alpha()
+        elif self.direction == 'right' and 50<=self.mouthChange%100<100:
+            pac_Pic = pygame.image.load('pacman_small_right.png').convert_alpha()
+        elif self.direction == 'right' and self.mouthChange%100<50:
+            pac_Pic = pygame.image.load('pacman_big_right.png').convert_alpha()
+        elif self.direction == 'down' and 50 <= self.mouthChange % 100 < 100:
+            pac_Pic = pygame.image.load('pacman_small_down.png').convert_alpha()
+        elif self.direction == 'down' and self.mouthChange % 100 < 50:
+            pac_Pic = pygame.image.load('pacman_big_down.png').convert_alpha()
+        elif self.direction == 'up' and 50 <= self.mouthChange % 100 < 100:
+            pac_Pic = pygame.image.load('pacman_big_up.png').convert_alpha()
+        else:
+            pac_Pic = pygame.image.load('pacman_small_up.png').convert_alpha()
+        return pac_Pic
+
     def Board(self,background):
         self.screen.fill((0,0,0))
         self.screen.blit(background,(0,0))
@@ -110,22 +129,10 @@ class PacMan:
                     pygame.draw.circle(self.screen, [204, 102, 0], (j * self.square + self.square/2, i * self.square + self.square/2),self.square/5)
                 else:
                     self.g_pos.append([i, j])
-        if self.direction == 'left' and 50 <= self.mouthChange % 100 < 100:
-            pac_Pic = pygame.image.load('pacman_small_left.png').convert()
-        elif self.direction == 'left' and self.mouthChange % 100 < 50:
-                pac_Pic = pygame.image.load('pacman_big_left.png').convert()
-        elif self.direction == 'right' and 50<=self.mouthChange%100<100:
-            pac_Pic = pygame.image.load('pacman_small_right.png').convert()
-        elif self.direction == 'right' and self.mouthChange%100<50:
-            pac_Pic = pygame.image.load('pacman_big_right.png').convert()
-        elif self.direction == 'down' and 50 <= self.mouthChange % 100 < 100:
-            pac_Pic = pygame.image.load('pacman_small_down.png').convert()
-        elif self.direction == 'down' and self.mouthChange % 100 < 50:
-            pac_Pic = pygame.image.load('pacman_big_down.png').convert()
-        elif self.direction == 'up' and 50 <= self.mouthChange % 100 < 100:
-            pac_Pic = pygame.image.load('pacman_big_up.png').convert()
-        else:
-            pac_Pic = pygame.image.load('pacman_small_up.png').convert()
+        #pygame.draw.circle(self.screen,[255,255,0],(math.floor(self.pacman[1]*self.square+self.square/2),math.floor(self.pacman[0]*self.square+self.square/2)),self.square/3)
+        if self.mouthChange==100:
+            self.setMouthChange(0)
+        pac_Pic=self.pacAnimation()
         self.screen.blit(pac_Pic,(math.floor(self.pacman[1]*self.square),math.floor(self.pacman[0]*self.square)))
         Font = pygame.font.SysFont('arial black', math.floor(self.square/1.5))
         text = Font.render('COINS: {}'.format(self.coinCount), True, (255, 255, 0))
@@ -133,7 +140,7 @@ class PacMan:
         textRect.center = (2*self.square, 15*self.square)
         self.screen.blit(text, textRect)
         self.draw_Ghosts()
-        pygame.display.update()
+        pygame.display.flip()
 
     def winning(self):
         running = True
