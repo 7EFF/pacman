@@ -1,4 +1,4 @@
-import sys,os,pygame
+import sys, os, pygame
 pygame.init()
 from pygame import mixer
 from pygame.locals import *
@@ -6,6 +6,7 @@ pygame.font.init()
 pygame.mixer.init()
 from ghosts_class import *
 import time
+import copy
 
 class PacMan:
     def __init__(self,direction,gameBoard,square,screen,pacman,coinCount,length,width,pacspeed,eatGhosts,mouthChange):
@@ -47,7 +48,7 @@ class PacMan:
 
     def canMove(self,row,col):
         if self.gameBoard[int(row)][int(col)]!=0:
-            if self.gameBoard[int(row)][int(col)]!=7:
+            if self.gameBoard[int(row)][int(col)]!=4:
                 return True
         return False
 
@@ -108,8 +109,9 @@ class PacMan:
             Directory = Directory + "up.png"
         elif self.direction == 'down':
             Directory = Directory + "down.png"
-        pacPic = pygame.image.load(Directory).convert_alpha()
-        return pacPic
+        pac_Pic = pygame.image.load(Directory).convert_alpha()
+        pac_Pic = pygame.transform.scale(pac_Pic, (self.square, self.square))
+        self.screen.blit(pac_Pic, (math.floor(self.pacman[1] * self.square), math.floor(self.pacman[0] * self.square), self.square, self.square))
 
     def Board(self,background):
         self.screen.fill((0,0,0))
@@ -126,12 +128,11 @@ class PacMan:
                     pygame.draw.circle(self.screen, [204, 102, 0], (j * self.square + self.square/2, i * self.square + self.square/2),self.square/5)
                 else:
                     self.g_pos.append([i, j])
-        pygame.draw.circle(self.screen,[255,255,0],(math.floor(self.pacman[1]*self.square+self.square/2),math.floor(self.pacman[0]*self.square+self.square/2)),self.square/3)
-        '''if self.mouthChange==100:
+        #pygame.draw.circle(self.screen,[255,255,0],(math.floor(self.pacman[1]*self.square+self.square/2),math.floor(self.pacman[0]*self.square+self.square/2)),self.square/3)
+        if self.mouthChange==100:
             self.setMouthChange(0)
         pac_Pic=self.pacAnimation()
-        pac_Pic=pygame.transform.scale(pac_Pic,(self.square,self.square))
-        self.screen.blit(pac_Pic,(math.floor(self.pacman[1]*self.square),math.floor(self.pacman[0]*self.square),self.square,self.square))'''
+
         Font = pygame.font.SysFont('arial black', math.floor(self.square/1.5))
         text = Font.render('COINS: {}'.format(self.coinCount), True, (255, 255, 0))
         textRect = text.get_rect()
@@ -168,17 +169,9 @@ class PacMan:
         running = True
         while running:
             self.screen.fill((0, 0, 0))
-            Font = pygame.font.SysFont('arial black', 30)
-            text = Font.render('PRESS SPACE TO START', True, (255, 0, 0))
-            textRect = text.get_rect()
-            textRect.center = (self.length / 2, self.width / 5)
-            self.screen.blit(text, textRect)
-            player = pygame.image.load(os.path.join("pacman_pic.png"))
-            self.screen.blit(player, (5*self.square, 5*self.square))
-            text = Font.render('PRESS SPACE TO START', True, (255, 0, 0))
-            textRect = text.get_rect()
-            textRect.center = (14*self.square, 3*self.square)
-            self.screen.blit(text, textRect)
+            player = pygame.image.load("pacman_pic.png")
+            player = pygame.transform.scale(player, (self.width, self.length))
+            self.screen.blit(player, (0, 0))
             for event in pygame.event.get():
                 if event.type == KEYDOWN:
                     if event.key == K_ESCAPE:
@@ -226,11 +219,10 @@ class PacMan:
     ###########################DRAWING###########################
 
 def main():
-
     square = 25
     pacspeed=1/64
-    '''clock = pygame.time.Clock()
-    clock.tick(30)'''
+    clock = pygame.time.Clock()
+    clock.tick(30)
     from pygame.locals import (
         K_UP,
         K_DOWN,
@@ -241,7 +233,7 @@ def main():
         QUIT,
     )
 
-    gameBoard = [
+    ogGameBoard = [
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0,0,],
         [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,0,0,],
         [0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,0,0,],
@@ -279,6 +271,7 @@ def main():
         # 3=מטסעות גדולים
         #4=מקום שרק רוחות עוברות בו
     ]
+    gameBoard= copy.deepcopy(ogGameBoard)
     [length, width] = [31 * square, 28 * square]
     screen = pygame.display.set_mode((width, length))
     pacman = [23, 13.5]
@@ -289,11 +282,11 @@ def main():
     req = 'up'
     blueCounter=0
     eatGhosts=False
-    background = pygame.image.load('background.png').convert_alpha()
+    background = pygame.image.load('backGround.png').convert_alpha()
     background = pygame.transform.scale(background, (width, length))
     mouthChange=0
     user = PacMan(direction, gameBoard, square, screen, pacman,coinCount,length,width,pacspeed,eatGhosts,mouthChange)
-    #user.Intro_Render()
+    user.Intro_Render()
     user.make_Ghosts()
     while running:
         user.Board(background)
@@ -356,16 +349,16 @@ def main():
                 eat_ghost.set_volume(0.6)
                 eat_ghost.play()
         if eatGhosts:
-            if blueCounter==2000:
+            if blueCounter==3000:
                 for gh in user.ghosts:
                     gh.blueOver()
                 blueCounter=0
                 eatGhosts=False
-            if blueCounter >= 1600 and blueCounter % 80 == 0:
+            if blueCounter >= 2200 and blueCounter % 160 == 0:
                 for gh in user.ghosts:
                     if gh.getDied()==False:
                         gh.flickerToBLUE()
-            if blueCounter >= 1600 and blueCounter % 80 == 40:
+            if blueCounter >= 2200 and blueCounter % 160 == 80:
                 for gh in user.ghosts:
                     gh.flickerToOG()
             blueCounter+=1
