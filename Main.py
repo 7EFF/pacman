@@ -169,7 +169,7 @@ class PacMan:
         running = True
         while running:
             self.screen.fill((0, 0, 0))
-            player = pygame.image.load("pacman_pic.png")
+            player = pygame.image.load("intro_pic.png")
             player = pygame.transform.scale(player, (self.width, self.length))
             self.screen.blit(player, (0, 0))
             for event in pygame.event.get():
