@@ -1,11 +1,11 @@
 import sys,os,pygame
-import time
+pygame.init()
 from pygame import mixer
 from pygame.locals import *
-pygame.init()
 pygame.font.init()
 pygame.mixer.init()
 from ghosts_class import *
+import time
 
 class PacMan:
     def __init__(self,direction,gameBoard,square,screen,pacman,coinCount,length,width,pacspeed,eatGhosts,mouthChange):
@@ -79,61 +79,59 @@ class PacMan:
         for gh in self.ghosts:
             gh.drawGhost()
             gh.fruitEaten()
-        #pygame.display.update()
 
     def draw_Ghosts(self):
         for gh in self.ghosts:
             gh.drawGhost()
             gh.movementBehaves()
-        #pygame.display.update()
 
     def make_Ghosts(self):
         self.ghosts = [Ghost(self, 13, 14, [0, 255, 0],self.pacman[0],self.pacman[1]), Ghost(self, 12, 13, [255, 150, 0],self.pacman[0],self.pacman[1]),Ghost(self, 12, 14, [255, 0, 0],self.pacman[0],self.pacman[1]), Ghost(self, 13, 13, [100, 0, 150],self.pacman[0],self.pacman[1])]
         for gh in self.ghosts:
             gh.drawGhost()
-        #pygame.display.update()
 
     ###########################GHOSTS###########################
 
     ###########################DRAWING###########################
 
     def pacAnimation(self):
-        if self.direction == 'left' and 50 <= self.mouthChange % 100 < 100:
-            pac_Pic = pygame.image.load('pacman_small_left.png').convert_alpha()
-        elif self.direction == 'left' and self.mouthChange % 100 < 50:
-                pac_Pic = pygame.image.load('pacman_big_left.png').convert_alpha()
-        elif self.direction == 'right' and 50<=self.mouthChange%100<100:
-            pac_Pic = pygame.image.load('pacman_small_right.png').convert_alpha()
-        elif self.direction == 'right' and self.mouthChange%100<50:
-            pac_Pic = pygame.image.load('pacman_big_right.png').convert_alpha()
-        elif self.direction == 'down' and 50 <= self.mouthChange % 100 < 100:
-            pac_Pic = pygame.image.load('pacman_small_down.png').convert_alpha()
-        elif self.direction == 'down' and self.mouthChange % 100 < 50:
-            pac_Pic = pygame.image.load('pacman_big_down.png').convert_alpha()
-        elif self.direction == 'up' and 50 <= self.mouthChange % 100 < 100:
-            pac_Pic = pygame.image.load('pacman_big_up.png').convert_alpha()
+        Directory = "PacPics\pacman_"
+        if 50 <= self.mouthChange % 100 < 100:
+            Directory = Directory + "big_"
         else:
-            pac_Pic = pygame.image.load('pacman_small_up.png').convert_alpha()
-        return pac_Pic
+            Directory = Directory + "small_"
+        if self.direction == 'left':
+            Directory = Directory + "left.png"
+        elif self.direction == 'right':
+            Directory = Directory + "right.png"
+        elif self.direction == 'up':
+            Directory = Directory + "up.png"
+        elif self.direction == 'down':
+            Directory = Directory + "down.png"
+        pacPic = pygame.image.load(Directory).convert_alpha()
+        return pacPic
 
     def Board(self,background):
         self.screen.fill((0,0,0))
+        coinsCount=0
         self.screen.blit(background,(0,0))
         for i in range(len(self.gameBoard[0])):
             for j in range(len(self.gameBoard[1])):
                 if self.gameBoard[i][j] == 1:
                     pygame.draw.circle(self.screen, [255, 255, 255], (j * self.square + self.square/2, i * self.square + self.square/2), self.square/10)
+                    coinsCount+=1
                 elif self.gameBoard[i][j]==2:
                     pygame.draw.circle(self.screen, [0, 0, 0], (j * self.square + self.square / 2, i * self.square + self.square / 2), self.square / 5)
                 elif self.gameBoard[i][j] == 3:
                     pygame.draw.circle(self.screen, [204, 102, 0], (j * self.square + self.square/2, i * self.square + self.square/2),self.square/5)
                 else:
                     self.g_pos.append([i, j])
-        #pygame.draw.circle(self.screen,[255,255,0],(math.floor(self.pacman[1]*self.square+self.square/2),math.floor(self.pacman[0]*self.square+self.square/2)),self.square/3)
-        if self.mouthChange==100:
+        pygame.draw.circle(self.screen,[255,255,0],(math.floor(self.pacman[1]*self.square+self.square/2),math.floor(self.pacman[0]*self.square+self.square/2)),self.square/3)
+        '''if self.mouthChange==100:
             self.setMouthChange(0)
         pac_Pic=self.pacAnimation()
-        self.screen.blit(pac_Pic,(math.floor(self.pacman[1]*self.square),math.floor(self.pacman[0]*self.square)))
+        pac_Pic=pygame.transform.scale(pac_Pic,(self.square,self.square))
+        self.screen.blit(pac_Pic,(math.floor(self.pacman[1]*self.square),math.floor(self.pacman[0]*self.square),self.square,self.square))'''
         Font = pygame.font.SysFont('arial black', math.floor(self.square/1.5))
         text = Font.render('COINS: {}'.format(self.coinCount), True, (255, 255, 0))
         textRect = text.get_rect()
@@ -141,6 +139,8 @@ class PacMan:
         self.screen.blit(text, textRect)
         self.draw_Ghosts()
         pygame.display.flip()
+        if coinsCount==0:
+            self.winning()
 
     def winning(self):
         running = True
@@ -185,7 +185,7 @@ class PacMan:
                         pygame.quit()
                         sys.exit()
                     if event.key == K_SPACE:
-                        intro_sound = mixer.Sound('pacman_beginning.wav')
+                        intro_sound = mixer.Sound('Sounds\pacman_beginning.wav')
                         intro_sound.set_volume(0.2)
                         intro_sound.play()
                         for i in range(len(self.gameBoard[0])):
@@ -203,7 +203,7 @@ class PacMan:
             pygame.display.update()
 
     def died_wait(self):
-        fruit_Sound = mixer.Sound('pacman_death.wav')
+        fruit_Sound = mixer.Sound('Sounds\pacman_death.wav')
         fruit_Sound.set_volume(0.2)
         fruit_Sound.play()
         while True:
@@ -259,7 +259,7 @@ def main():
         [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
         [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
         [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
-        [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
+        [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
         [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
         [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
         [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,0,0,],
@@ -289,7 +289,7 @@ def main():
     req = 'up'
     blueCounter=0
     eatGhosts=False
-    background = pygame.image.load('background.png').convert()
+    background = pygame.image.load('background.png').convert_alpha()
     background = pygame.transform.scale(background, (width, length))
     mouthChange=0
     user = PacMan(direction, gameBoard, square, screen, pacman,coinCount,length,width,pacspeed,eatGhosts,mouthChange)
@@ -330,13 +330,13 @@ def main():
             coinCount += 10
             gameBoard[int(pacman[0])][int(pacman[1])] = 2
             if pygame.mixer.get_busy()==False:
-                eating_Sound= mixer.Sound('pacman_chomp.wav')
+                eating_Sound= mixer.Sound('Sounds\pacman_chomp.wav')
                 eating_Sound.set_volume(0.5)
                 eating_Sound.play()
         if gameBoard[int(pacman[0])][int(pacman[1])] == 3:
             coinCount+= 200
             gameBoard[int(pacman[0])][int(pacman[1])] = 2
-            fruit_Sound = mixer.Sound('pacman_eatfruit.wav')
+            fruit_Sound = mixer.Sound('Sounds\pacman_eatfruit.wav')
             fruit_Sound.set_volume(0.6)
             fruit_Sound.play()
             user.fruitEaten()
@@ -352,7 +352,7 @@ def main():
             if died=='eaten':
                 gh.eatenBlue()
                 coinCount+=400
-                eat_ghost = mixer.Sound('pacman_eatghost.wav')
+                eat_ghost = mixer.Sound('Sounds\pacman_eatghost.wav')
                 eat_ghost.set_volume(0.6)
                 eat_ghost.play()
         if eatGhosts:
@@ -369,8 +369,6 @@ def main():
                 for gh in user.ghosts:
                     gh.flickerToOG()
             blueCounter+=1
-        if coinCount>4000:
-            user.winning()
         user.setPacMan(pacman)
         user.setCoinCount(coinCount)
         user.setDirection(direction)
