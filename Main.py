@@ -132,10 +132,10 @@ class PacMan:
         if self.mouthChange==100:
             self.setMouthChange(0)
         self.pacAnimation()
-        Font = pygame.font.SysFont('arial black', math.floor(self.square/1.5))
+        Font = pygame.font.SysFont('bn elements', math.floor(self.square/1.5))
         text = Font.render('COINS: {}'.format(self.coinCount), True, (255, 255, 0))
         textRect = text.get_rect()
-        textRect.center = (2*self.square, 15*self.square)
+        textRect.center = (2*self.square, 17.5*self.square)
         self.screen.blit(text, textRect)
         self.draw_Ghosts()
         pygame.display.flip()
