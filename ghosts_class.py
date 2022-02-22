@@ -65,6 +65,10 @@ class Ghost:
         elif self.direction == 'down':
             if self.canMove(math.ceil(self.row + self.ghostspeed), self.col) and self.col % 1.0 == 0:
                 self. row += self.ghostspeed
+        if self.col<0.015625 and self.direction=='left':
+            self.col = 27.484375
+        if self.col>26.984375 and self.direction=='right':
+            self.col = 0.015625
 
     def getColour(self):
         return self.colour
@@ -96,4 +100,4 @@ class Ghost:
         self.ghostspeed = 1 / 128
 
     def drawGhost(self):
-        pygame.draw.circle(self.main.screen, self.colour, (math.floor(self.col* self.main.square + self.main.square/2),math.floor(self.row* self.main.square + self.main.square/2)),self.main.square / 4)
+        pygame.draw.circle(self.main.screen, self.colour, (math.floor(self.col* self.main.square + self.main.square/2),math.floor(self.row* self.main.square + self.main.square/2)),math.floor(self.main.square / 3))
