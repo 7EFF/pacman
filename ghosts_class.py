@@ -22,11 +22,11 @@ class Ghost:
         self.died=False
 
     def ifTouched(self):
-        if math.floor(self.row)==math.floor(self.main.pacman[0]) and math.floor(self.main.pacman[1])==math.floor(self.col) and self.main.eatGhosts==False:
+        if math.floor(self.row)==math.floor(self.main.pacman[0]) and math.ceil(self.main.pacman[1])==math.ceil(self.col) and self.main.eatGhosts==False:
             return 'died'
-        if math.floor(self.row)==math.floor(self.main.pacman[0]) and math.floor(self.main.pacman[1])==math.floor(self.col) and self.main.eatGhosts==True and self.died==False:
+        if math.floor(self.row)==math.floor(self.main.pacman[0]) and math.ceil(self.main.pacman[1])==math.ceil(self.col) and self.main.eatGhosts==True and self.died==False:
             return 'eaten'
-        if math.floor(self.row) == math.floor(self.main.pacman[0]) and math.floor(self.main.pacman[1]) == math.floor(self.col) and self.died==True:
+        if math.floor(self.row) == math.floor(self.main.pacman[0]) and math.ceil(self.main.pacman[1]) == math.ceil(self.col) and self.died==True:
             return 'died'
 
     def canMove(self,row,col):
