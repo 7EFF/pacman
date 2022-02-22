@@ -73,8 +73,8 @@ class Ghost:
     def getColour(self):
         return self.colour
 
-    def fruitEaten(self):
-        self.colour = [0, 0, 255]
+    def bigCoinEaten(self):
+        self.colour = 'blue'
         self.movementBehaves()
         self.ghostspeed=1/256
         self.died=False
@@ -90,7 +90,7 @@ class Ghost:
         self.colour = self.ogcolour
 
     def flickerToBLUE(self):
-        self.colour = [0,0,255]
+        self.colour = 'blue'
 
     def getDied(self):
         return self.died
@@ -99,5 +99,38 @@ class Ghost:
         self.colour = self.ogcolour
         self.ghostspeed = 1 / 128
 
+    def DirForPic(self):
+        if self.direction == 'up':
+            return 'up.png'
+        elif self.direction == 'down':
+            return 'down.png'
+        elif self.direction == 'right':
+            return 'right.png'
+        elif self.direction == 'left':
+            return 'left.png'
+
     def drawGhost(self):
-        pygame.draw.circle(self.main.screen, self.colour, (math.floor(self.col* self.main.square + self.main.square/2),math.floor(self.row* self.main.square + self.main.square/2)),math.floor(self.main.square / 3))
+        #pygame.draw.circle(self.main.screen, self.colour, (math.floor(self.col* self.main.square + self.main.square/2),math.floor(self.row* self.main.square + self.main.square/2)),math.floor(self.main.square / 2.4))
+        Directory=''
+        if self.colour=='blue':
+            Directory = 'GhostsPics\_blue.png'
+        else:
+            if self.colour=='pink':
+                Directory='GhostsPics\_pink_'
+                Dir=self.DirForPic()
+                Directory = Directory+Dir
+            elif self.colour=='cyan':
+                Directory = 'GhostsPics\_cyan_'
+                Dir = self.DirForPic()
+                Directory = Directory + Dir
+            elif self.colour=='yellow':
+                Directory = 'GhostsPics\_yellow_'
+                Dir = self.DirForPic()
+                Directory = Directory + Dir
+            elif self.colour=='red':
+                Directory='GhostsPics\_red_'
+                Dir = self.DirForPic()
+                Directory = Directory + Dir
+        ghost_Pic = pygame.image.load(Directory).convert()
+        ghost_Pic = pygame.transform.scale(ghost_Pic, (int(self.main.square * 1.3), int(self.main.square * 1.3)))
+        self.main.screen.blit(ghost_Pic, (math.floor(self.col * self.main.square), math.floor(self.row * self.main.square), self.main.square, self.main.square))
