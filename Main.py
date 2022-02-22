@@ -77,10 +77,10 @@ class PacMan:
 
     ###########################GHOSTS###########################
 
-    def fruitEaten(self):
+    def bigCoinEaten(self):
         for gh in self.ghosts:
             gh.drawGhost()
-            gh.fruitEaten()
+            gh.bigCoinEaten()
 
     def draw_Ghosts(self):
         for gh in self.ghosts:
@@ -88,7 +88,7 @@ class PacMan:
             gh.movementBehaves()
 
     def make_Ghosts(self):
-        self.ghosts = [Ghost(self, 13, 14, [255, 105, 180],self.pacman[0],self.pacman[1]), Ghost(self, 12, 13, [255, 150, 0],self.pacman[0],self.pacman[1]),Ghost(self, 12, 14, [255, 0, 0],self.pacman[0],self.pacman[1]), Ghost(self, 13, 13, [0, 255, 255],self.pacman[0],self.pacman[1])]
+        self.ghosts = [Ghost(self, 13, 14, 'yellow',self.pacman[0],self.pacman[1]), Ghost(self, 12, 13, 'pink',self.pacman[0],self.pacman[1]),Ghost(self, 12, 14, 'cyan',self.pacman[0],self.pacman[1]), Ghost(self, 13, 13, 'red',self.pacman[0],self.pacman[1])]
         for gh in self.ghosts:
             gh.drawGhost()
 
@@ -121,12 +121,12 @@ class PacMan:
         for i in range(len(self.gameBoard[0])):
             for j in range(len(self.gameBoard[1])):
                 if self.gameBoard[i][j] == 1:
-                    pygame.draw.circle(self.screen, [248, 152, 128], (j * self.square + self.square/2, i * self.square + self.square/2), self.square/8)
+                    pygame.draw.circle(self.screen, [248, 152, 128], (j * self.square + self.square/2, i * self.square + self.square/2), self.square/5)
                     coinsCount+=1
                 elif self.gameBoard[i][j]==2:
-                    pygame.draw.circle(self.screen, [0, 0, 0], (j * self.square + self.square / 2, i * self.square + self.square / 2), self.square / 5)
-                elif self.gameBoard[i][j] == 3 and BigCoinChange<100:
-                    pygame.draw.circle(self.screen, [248, 152, 128], (j * self.square + self.square/2, i * self.square + self.square/2),self.square/3)
+                    pygame.draw.circle(self.screen, [0, 0, 0], (j * self.square + self.square / 2, i * self.square + self.square / 2), self.square / 3)
+                elif self.gameBoard[i][j] == 3 and BigCoinChange<50:
+                    pygame.draw.circle(self.screen, [248, 152, 128], (j * self.square + self.square/2, i * self.square + self.square/2),self.square/2)
                 else:
                     self.g_pos.append([i, j])
         if self.mouthChange==100:
@@ -232,7 +232,7 @@ def main():
         QUIT,
     )
 
-    ogGameBoard = [
+    gameBoard = [
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0,0,],
         [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,0,0,],
         [0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,0,0,],
@@ -244,7 +244,7 @@ def main():
         [0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0,0,0,],
         [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
         [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
-        [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 2, 2, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
+        [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
         [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 4, 4, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
         [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 2, 2, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,0,0,],
@@ -270,7 +270,6 @@ def main():
         # 3=מטסעות גדולים
         #4=מקום שרק רוחות עוברות בו
     ]
-    gameBoard= copy.deepcopy(ogGameBoard)
     [length, width] = [31 * square, 28 * square]
     screen = pygame.display.set_mode((width, length))
     pacman = [23, 13.5]
@@ -291,7 +290,7 @@ def main():
     while running:
         BigCoinChange+=1
         user.Board(background,BigCoinChange)
-        if BigCoinChange == 200:
+        if BigCoinChange == 100:
             BigCoinChange = 0
         for event in pygame.event.get():
             if event.type == KEYDOWN:
@@ -326,6 +325,7 @@ def main():
             pacman[0], pacman[1] = user.move(direction, pacman[0], 27.484375)
         if pacman[1]>26.984375 and direction=='right':
             pacman[0], pacman[1] = user.move(direction, pacman[0], 0.015625)
+            gameBoard[int(pacman[0])][27] = 2
         if gameBoard[int(pacman[0])][int(pacman[1])] == 1:
             coinCount += 10
             gameBoard[int(pacman[0])][int(pacman[1])] = 2
@@ -339,7 +339,7 @@ def main():
             fruit_Sound = mixer.Sound('Sounds\pacman_eatfruit.wav')
             fruit_Sound.set_volume(0.6)
             fruit_Sound.play()
-            user.fruitEaten()
+            user.bigCoinEaten()
             eatGhosts=True
             blueCounter=0
         for gh in user.ghosts:
