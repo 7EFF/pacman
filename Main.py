@@ -109,7 +109,7 @@ class PacMan:
             Directory = Directory + "up.png"
         elif self.direction == 'down':
             Directory = Directory + "down.png"
-        pac_Pic = pygame.image.load(Directory).convert_alpha()
+        pac_Pic = pygame.image.load(Directory)
         pac_Pic = pygame.transform.scale(pac_Pic, (self.square, self.square))
         self.screen.blit(pac_Pic, (math.floor(self.pacman[1] * self.square), math.floor(self.pacman[0] * self.square), self.square, self.square))
 
@@ -219,10 +219,10 @@ class PacMan:
     ###########################DRAWING###########################
 
 def main():
-    square = 25
+    square = 20
     pacspeed=1/64
     clock = pygame.time.Clock()
-    clock.tick(30)
+    clock.tick(1)
     from pygame.locals import (
         K_UP,
         K_DOWN,
@@ -248,7 +248,7 @@ def main():
         [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 2, 2, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
         [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 4, 4, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
         [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 2, 2, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
-        [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,0,0,],
         [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
         [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
         [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
@@ -286,9 +286,10 @@ def main():
     background = pygame.transform.scale(background, (width, length))
     mouthChange=0
     user = PacMan(direction, gameBoard, square, screen, pacman,coinCount,length,width,pacspeed,eatGhosts,mouthChange)
-    user.Intro_Render()
+    #user.Intro_Render()
     user.make_Ghosts()
     while running:
+
         user.Board(background)
         for event in pygame.event.get():
             if event.type == KEYDOWN:
@@ -319,6 +320,18 @@ def main():
             if (user.canMove(math.ceil(pacman[0] + pacspeed), pacman[1]) and pacman[1]%1.0 ==0):
                 direction='down'
         pacman[0], pacman[1] = user.move(direction, pacman[0], pacman[1])
+        print(pacman)
+        if pacman[1]<0.2:
+            print('LEFT LIMIT')
+            pacman[0], pacman[1] = user.move(direction, pacman[0], 27.5)
+            direction = 'left'
+
+
+
+
+
+
+
         if gameBoard[int(pacman[0])][int(pacman[1])] == 1:
             coinCount += 10
             gameBoard[int(pacman[0])][int(pacman[1])] = 2
@@ -335,9 +348,9 @@ def main():
             user.fruitEaten()
             eatGhosts=True
             blueCounter=0
-        if int(pacman[0]==0) and int(pacman[1]==10):
-            pacman[0]=20
-            pacman[1]=10
+        if int(pacman[0]==0.0) and int(pacman[1]==15):
+            pacman[0]=31
+            pacman[1]=15
         for gh in user.ghosts:
             died = gh.ifTouched()
             if died=='died':
