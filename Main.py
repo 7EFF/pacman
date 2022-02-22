@@ -121,12 +121,12 @@ class PacMan:
         for i in range(len(self.gameBoard[0])):
             for j in range(len(self.gameBoard[1])):
                 if self.gameBoard[i][j] == 1:
-                    pygame.draw.circle(self.screen, [204, 102, 0], (j * self.square + self.square/2, i * self.square + self.square/2), self.square/8)
+                    pygame.draw.circle(self.screen, [248, 152, 128], (j * self.square + self.square/2, i * self.square + self.square/2), self.square/8)
                     coinsCount+=1
                 elif self.gameBoard[i][j]==2:
                     pygame.draw.circle(self.screen, [0, 0, 0], (j * self.square + self.square / 2, i * self.square + self.square / 2), self.square / 5)
                 elif self.gameBoard[i][j] == 3 and BigCoinChange<100:
-                    pygame.draw.circle(self.screen, [204, 102, 0], (j * self.square + self.square/2, i * self.square + self.square/2),self.square/3)
+                    pygame.draw.circle(self.screen, [248, 152, 128], (j * self.square + self.square/2, i * self.square + self.square/2),self.square/3)
                 else:
                     self.g_pos.append([i, j])
         if self.mouthChange==100:
