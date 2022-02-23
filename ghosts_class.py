@@ -29,20 +29,23 @@ class Ghost:
         if math.floor(self.row) == math.floor(self.main.pacman[0]) and math.ceil(self.main.pacman[1]) == math.ceil(self.col) and self.died==True:
             return 'died'
 
-    def canMove(self,row,col):
-        if self.main.gameBoard[int(row)][int(col)]!=0:
+    def canMove(self,row,col,index):
+        if self.main.gameBoard[int(row)][int(col)]!=index and self.main.gameBoard[int(row)][int(col)]!=0:
             return True
         return False
 
     def randDirection(self):
+        index = 0
+        if self.died:
+            index = 4
         possibleTurn=[]
-        if self.canMove(math.floor(self.row - self.ghostspeed), self.col) and self.col % 1.0 == 0 and self.direction!='down':
+        if self.canMove(math.floor(self.row - self.ghostspeed), self.col,index) and self.col % 1.0 == 0 and self.direction!='down':
             possibleTurn.append('up')
-        if self.canMove(self.row, math.ceil(self.col + self.ghostspeed)) and self.row % 1.0 == 0 and self.direction!='left':
+        if self.canMove(self.row, math.ceil(self.col + self.ghostspeed),index) and self.row % 1.0 == 0 and self.direction!='left':
             possibleTurn.append('right')
-        if self.canMove(self.row, math.floor(self.col - self.ghostspeed)) and self.row % 1.0 == 0 and self.direction!='right':
+        if self.canMove(self.row, math.floor(self.col - self.ghostspeed),index) and self.row % 1.0 == 0 and self.direction!='right':
             possibleTurn.append('left')
-        if self.canMove(math.ceil(self.row + self.ghostspeed), self.col) and self.col % 1.0 == 0 and self.direction!='up':
+        if self.canMove(math.ceil(self.row + self.ghostspeed), self.col,index) and self.col % 1.0 == 0 and self.direction!='up':
             possibleTurn.append('down')
         if len(possibleTurn)>=1:
             self.direction=random.choice(possibleTurn)
@@ -53,17 +56,20 @@ class Ghost:
             self.randDirection()
 
     def move(self):
+        index =0
+        if self.died:
+            index=4
         if self.direction == 'up':
-            if self.canMove(math.floor(self.row - self.ghostspeed), self.col) and self.col % 1.0 == 0:
+            if self.canMove(math.floor(self.row - self.ghostspeed), self.col,index) and self.col % 1.0 == 0:
                 self.row -= self.ghostspeed
         elif self.direction == 'right':
-            if self.canMove(self.row, math.ceil(self.col + self.ghostspeed)) and self.row % 1.0 == 0:
+            if self.canMove(self.row, math.ceil(self.col + self.ghostspeed),index) and self.row % 1.0 == 0:
                 self.col += self.ghostspeed
         elif self.direction == 'left':
-            if self.canMove(self.row, math.floor(self.col - self.ghostspeed)) and self.row % 1.0 == 0:
+            if self.canMove(self.row, math.floor(self.col - self.ghostspeed),index) and self.row % 1.0 == 0:
                 self. col -= self.ghostspeed
         elif self.direction == 'down':
-            if self.canMove(math.ceil(self.row + self.ghostspeed), self.col) and self.col % 1.0 == 0:
+            if self.canMove(math.ceil(self.row + self.ghostspeed), self.col,index) and self.col % 1.0 == 0:
                 self. row += self.ghostspeed
         if self.col<0.015625 and self.direction=='left':
             self.col = 27.484375
@@ -98,6 +104,7 @@ class Ghost:
     def blueOver(self):
         self.colour = self.ogcolour
         self.ghostspeed = 1 / 128
+        self.died=False
 
     def DirForPic(self):
         if self.direction == 'up':
