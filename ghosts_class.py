@@ -58,9 +58,7 @@ class Ghost:
     def movementBehaves(self):
         if self.ghostBehave=='Random':
             self.randDirection()
-            print(self.colour,'Random')
         if self.ghostBehave=='Leave':
-            print(self.colour,' Leave')
             self.move()
             if self.main.gameBoard[int(self.row)][int(self.col)]==5:
                 self.leftSpawn=True
@@ -86,7 +84,6 @@ class Ghost:
             self.col = 27.484375
         if self.col>26.984375 and self.direction=='right':
             self.col = 0.015625
-        print (self.row)
         return
 
     def getColour(self):
@@ -124,6 +121,8 @@ class Ghost:
             self.direction='up'
             self.ghostBehave='Leave'
             self.movementBehaves()
+            self.row = self.ogrow
+            self.col = self.ogcol
 
     def DirForPic(self):
         if self.direction == 'up':
