@@ -82,13 +82,13 @@ class PacMan:
             gh.drawGhost()
             gh.bigCoinEaten()
 
-    def draw_Ghosts(self):
+    def move_Ghosts(self):
         for gh in self.ghosts:
             gh.drawGhost()
             gh.movementBehaves()
 
     def make_Ghosts(self):
-        self.ghosts = [Ghost(self, 13, 14, 'yellow',self.pacman[0],self.pacman[1]), Ghost(self, 12, 13, 'pink',self.pacman[0],self.pacman[1]),Ghost(self, 12, 14, 'cyan',self.pacman[0],self.pacman[1]), Ghost(self, 13, 13, 'red',self.pacman[0],self.pacman[1])]
+        self.ghosts = [Ghost(self, 13, 14, 'yellow',self.pacman[0],self.pacman[1]), Ghost(self, 14, 13, 'pink',self.pacman[0],self.pacman[1]),Ghost(self, 14, 14, 'cyan',self.pacman[0],self.pacman[1]), Ghost(self, 13, 13, 'red',self.pacman[0],self.pacman[1])]
         for gh in self.ghosts:
             gh.drawGhost()
 
@@ -137,7 +137,7 @@ class PacMan:
         textRect = text.get_rect()
         textRect.center = (2*self.square, 17.5*self.square)
         self.screen.blit(text, textRect)
-        self.draw_Ghosts()
+        self.move_Ghosts()
         pygame.display.flip()
         if coinsCount==0:
             self.winning()
@@ -244,10 +244,10 @@ def main():
         [0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0,0,0,],
         [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
         [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
-        [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
+        [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 5, 5, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
         [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 4, 4, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
         [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 2, 2, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,0,0,],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 2, 2, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,0,0,],
         [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
         [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
         [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0,0,],
