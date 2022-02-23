@@ -17,9 +17,10 @@ class Ghost:
         self.ogcol=col
         self.ogcolour = colour
         self.ghostspeed=1/128
-        self.ghostBehave='Random'
+        self.ghostBehave='Leave'
         self.direction='up'
         self.died=False
+        self.leftSpawn=False
 
     def ifTouched(self):
         if math.floor(self.row)==math.floor(self.main.pacman[0]) and math.ceil(self.main.pacman[1])==math.ceil(self.col) and self.main.eatGhosts==False:
@@ -33,6 +34,9 @@ class Ghost:
         if self.main.gameBoard[int(row)][int(col)]!=index and self.main.gameBoard[int(row)][int(col)]!=0:
             return True
         return False
+
+    def changeBehavior(self,NewBehave):
+        self.ghostBehave=NewBehave
 
     def randDirection(self):
         index = 0
@@ -54,10 +58,15 @@ class Ghost:
     def movementBehaves(self):
         if self.ghostBehave=='Random':
             self.randDirection()
+        if self.ghostBehave=='Leave':
+            self.move()
+            if self.main.gameBoard[int(self.row)][int(self.col)]==5:
+                self.leftSpawn=True
+                self.changeBehavior('Random')
 
     def move(self):
         index =0
-        if self.died:
+        if self.died or self.leftSpawn:
             index=4
         if self.direction == 'up':
             if self.canMove(math.floor(self.row - self.ghostspeed), self.col,index) and self.col % 1.0 == 0:
@@ -91,6 +100,8 @@ class Ghost:
         self.colour = self.ogcolour
         self.ghostspeed = 1 / 128
         self.died=True
+        self.leftSpawn = False
+        self.direction='up'
 
     def flickerToOG(self):
         self.colour = self.ogcolour
@@ -105,6 +116,9 @@ class Ghost:
         self.colour = self.ogcolour
         self.ghostspeed = 1 / 128
         self.died=False
+        if self.leftSpawn==False:
+            self.direction='up'
+            self.ghostBehave='Leave'
 
     def DirForPic(self):
         if self.direction == 'up':
