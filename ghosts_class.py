@@ -58,7 +58,9 @@ class Ghost:
     def movementBehaves(self):
         if self.ghostBehave=='Random':
             self.randDirection()
+            print(self.colour,'Random')
         if self.ghostBehave=='Leave':
+            print(self.colour,' Leave')
             self.move()
             if self.main.gameBoard[int(self.row)][int(self.col)]==5:
                 self.leftSpawn=True
@@ -84,6 +86,8 @@ class Ghost:
             self.col = 27.484375
         if self.col>26.984375 and self.direction=='right':
             self.col = 0.015625
+        print (self.row)
+        return
 
     def getColour(self):
         return self.colour
@@ -119,6 +123,7 @@ class Ghost:
         if self.leftSpawn==False:
             self.direction='up'
             self.ghostBehave='Leave'
+            self.movementBehaves()
 
     def DirForPic(self):
         if self.direction == 'up':
@@ -131,7 +136,6 @@ class Ghost:
             return 'left.png'
 
     def drawGhost(self):
-        #pygame.draw.circle(self.main.screen, self.colour, (math.floor(self.col* self.main.square + self.main.square/2),math.floor(self.row* self.main.square + self.main.square/2)),math.floor(self.main.square / 2.4))
         Directory=''
         if self.colour=='blue':
             Directory = 'GhostsPics\_blue.png'
