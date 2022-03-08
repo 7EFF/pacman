@@ -18,10 +18,11 @@ class Ghost:
         self.ogrow = row
         self.ogcol = col
         self.ogcolour = colour
-        self.ghostspeed = 1 / 128
+        self.ghostspeed = 1/2
         self.ghostBehave = 'Random'
         self.direction = 'up'
         self.died = True
+        self.blue=False
         self.leftSpawn = False
         self.hunterDelay = 0
         self.ghostLeave = 0
@@ -52,17 +53,13 @@ class Ghost:
         self.ghostBehave = NewBehave
 
     def ableToTurn(self, direction):
-        if self.canMove(self.row, math.floor(self.col - self.ghostspeed),
-                        0) and self.row % 1.0 == 0 and direction == 'left':
+        if self.canMove(self.row, math.floor(self.col - self.ghostspeed),0) and self.row % 1.0 == 0 and direction == 'left':
             return True
-        if self.canMove(math.ceil(self.row + self.ghostspeed), self.col,
-                        4) and self.col % 1.0 == 0 and direction == 'down':
+        if self.canMove(math.ceil(self.row + self.ghostspeed), self.col,4) and self.col % 1.0 == 0 and direction == 'down':
             return True
-        if self.canMove(math.floor(self.row - self.ghostspeed), self.col,
-                        0) and self.col % 1.0 == 0 and direction == 'up':
+        if self.canMove(math.floor(self.row - self.ghostspeed), self.col,0) and self.col % 1.0 == 0 and direction == 'up':
             return True
-        if self.canMove(self.row, math.ceil(self.col + self.ghostspeed),
-                        0) and self.row % 1.0 == 0 and direction == 'right':
+        if self.canMove(self.row, math.ceil(self.col + self.ghostspeed),0) and self.row % 1.0 == 0 and direction == 'right':
             return True
         else:
             return False
@@ -157,7 +154,7 @@ class Ghost:
             self.randDirection()
             if self.leftSpawn:
                 self.setHuntDelay(self.hunterDelay + 1)
-            if self.died:
+            if self.died and self.blue==False:
                 self.setLeaveSpawnDelay(self.ghostLeave + 1)
                 delay = 200
                 if self.ogcolour == 'yellow':
@@ -176,6 +173,7 @@ class Ghost:
                     self.setBehavior('Leave')
                     self.died = False
                     self.setLeaveSpawnDelay(0)
+                    self.ghostspeed=1/128
             if self.hunterDelay == 200:
                 self.setHuntDelay(0)
                 self.setBehavior('Hunt')
@@ -221,14 +219,15 @@ class Ghost:
         self.movementBehaves()
         self.ghostspeed = 1 / 256
         self.died = False
+        self.blue=True
 
     def eatenBlue(self):
         self.row = self.ogrow
         self.col = self.ogcol
         self.colour = self.ogcolour
-        self.ghostspeed = 1 / 128
-        self.setBehavior('Leave
-        self.died = True
+        self.ghostspeed = 1 / 2
+        self.setBehavior('Random')
+        self.died=True
         self.leftSpawn = False
         self.setLeaveSpawnDelay(0)
         self.setHuntDelay(0)
@@ -248,6 +247,7 @@ class Ghost:
         self.ghostspeed = 1 / 128
         self.died = False
         self.setBehavior('Hunt')
+        self.blue=False
         if self.leftSpawn == False:
             self.row = self.ogrow
             self.col = self.ogcol
