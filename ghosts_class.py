@@ -226,8 +226,8 @@ class Ghost:
         self.row = self.ogrow
         self.col = self.ogcol
         self.colour = self.ogcolour
-        self.ghostspeed = 1 / 2
-        self.setBehavior('Random')
+        self.ghostspeed = 1 / 128
+        self.setBehavior('Leave
         self.died = True
         self.leftSpawn = False
         self.setLeaveSpawnDelay(0)
