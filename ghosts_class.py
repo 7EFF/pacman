@@ -68,13 +68,13 @@ class Ghost:
         r_difference = self.row - self.main.pacman[0]
         c_difference = self.col - self.main.pacman[1]
 
-        if 'down' in possibleTurn and r_difference < 0:
+        if 'down' in possibleTurn and r_difference <= 0:
             self.direction = 'down'
             return
         if 'up' in possibleTurn and r_difference > 0:
             self.direction = 'up'
             return
-        if 'right' in possibleTurn and c_difference < 0:
+        if 'right' in possibleTurn and c_difference <= 0:
             self.direction = 'right'
             return
         if 'left' in possibleTurn and c_difference > 0:
@@ -100,13 +100,13 @@ class Ghost:
     def chooseEscapeRoute(self, possibleTurn):
         r_difference = self.row - self.main.pacman[0]
         c_difference = self.col - self.main.pacman[1]
-        if 'down' in possibleTurn and r_difference < 0 and 'up' in possibleTurn:
+        if 'down' in possibleTurn and r_difference <= 0 and 'up' in possibleTurn:
             self.direction = 'up'
             return
         if 'up' in possibleTurn and r_difference > 0 and 'down' in possibleTurn:
             self.direction = 'down'
             return
-        if 'right' in possibleTurn and c_difference < 0 and 'left' in possibleTurn:
+        if 'right' in possibleTurn and c_difference <= 0 and 'left' in possibleTurn:
             self.direction = 'left'
             return
         if 'left' in possibleTurn and c_difference > 0 and 'right' in possibleTurn:
@@ -246,8 +246,9 @@ class Ghost:
         self.colour = self.ogcolour
         self.ghostspeed = 1 / 128
         self.died = False
+        self.blue = False
         self.setBehavior('Hunt')
-        self.blue=False
+
         if self.leftSpawn == False:
             self.row = self.ogrow
             self.col = self.ogcol
