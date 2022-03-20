@@ -6,6 +6,8 @@ pygame.font.init()
 pygame.mixer.init()
 from ghosts_class import *
 import time
+import socket
+import select
 import copy
 
 
@@ -222,6 +224,8 @@ class PacMan:
     ###########################DRAWING###########################
 
 def main():
+    my_socket = socket.socket()
+    my_socket.connect(('127.0.0.1', 5555))
     square = 25
     pacspeed=1/64
     '''clock = pygame.time.Clock()
