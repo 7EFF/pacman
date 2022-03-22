@@ -12,7 +12,8 @@ import copy
 
 
 class PacMan:
-    def __init__(self,direction,gameBoard,square,screen,pacman,coinCount,length,width,pacspeed,eatGhosts,mouthChange):
+    def __init__(self,my_socket,direction,gameBoard,square,screen,pacman,coinCount,length,width,pacspeed,eatGhosts,mouthChange):
+        self.my_socket=my_socket
         self.direction=direction
         self.gameBoard = gameBoard
         self.square=square
@@ -27,8 +28,12 @@ class PacMan:
         self.eatGhosts=eatGhosts
         self.mouthChange=mouthChange
         self.ghostLeave=0
+        self.sentData=False
 
     ###########################SET & GET###########################
+
+    def setSentData(self,SentData):
+        self.sentData=SentData
 
     def setLeaveSpawnDelay(self,Delay):
         self.leaveSpawnDelay=Delay
@@ -120,7 +125,7 @@ class PacMan:
         pac_Pic = pygame.transform.scale(pac_Pic, (int(self.square*1.3), int(self.square*1.3)))
         self.screen.blit(pac_Pic, (math.floor(self.pacman[1] * self.square), math.floor(self.pacman[0] * self.square), self.square, self.square))
 
-    def Board(self,background,BigCoinChange):
+    def Board(self,background,BigCoinChange,Time_Counter):
         self.screen.fill((0,0,0))
         coinsCount=0
         self.screen.blit(background,(0,0))
@@ -146,9 +151,9 @@ class PacMan:
         self.move_Ghosts()
         pygame.display.flip()
         if coinsCount==0:
-            self.winning()
+            self.winning(Time_Counter)
 
-    def winning(self):
+    def winning(self,Time_Counter):
         running = True
         while running:
             for event in pygame.event.get():
@@ -168,6 +173,10 @@ class PacMan:
             textRect = text.get_rect()
             textRect.center = (self.length / 2, self.width / 3)
             self.screen.blit(text, textRect)
+            if self.sentData==False:
+                self.my_socket.send(str(self.coinCount).encode())
+                self.my_socket.send(str(Time_Counter).encode())
+                self.setSentData(True)
             pygame.display.update()
 
     def Intro_Render(self):
@@ -200,10 +209,11 @@ class PacMan:
                     sys.exit()
             pygame.display.update()
 
-    def died_wait(self):
+    def died_wait(self,Time_Counter):
         fruit_Sound = mixer.Sound('Sounds\pacman_death.wav')
         fruit_Sound.set_volume(0.2)
         fruit_Sound.play()
+
         while True:
             for event in pygame.event.get():
                 if event.type == KEYDOWN:
@@ -219,6 +229,10 @@ class PacMan:
             textRect = text.get_rect()
             textRect.center = (self.length / 2, self.width / 2)
             self.screen.blit(text, textRect)
+            if self.sentData == False:
+                self.my_socket.send(str(self.coinCount).encode())
+                self.my_socket.send(str(Time_Counter).encode())
+                self.setSentData(True)
             pygame.display.update()
 
     ###########################DRAWING###########################
@@ -291,18 +305,23 @@ def main():
     background = pygame.image.load('backGround.png').convert()
     background = pygame.transform.scale(background, (width, length))
     mouthChange=0
-    user = PacMan(direction, gameBoard, square, screen, pacman,coinCount,length,width,pacspeed,eatGhosts,mouthChange)
+    user = PacMan(my_socket,direction, gameBoard, square, screen, pacman,coinCount,length,width,pacspeed,eatGhosts,mouthChange)
     #user.Intro_Render()
     user.make_Ghosts()
+    Time_Counter=1
     BigCoinChange=0
     while running:
+        Time_Counter+=1
         BigCoinChange+=1
-        user.Board(background,BigCoinChange)
+        user.Board(background,BigCoinChange,Time_Counter)
         if BigCoinChange == 100:
             BigCoinChange = 0
         for event in pygame.event.get():
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
+                    Time_Counter=" "
+                    my_socket.send(str(coinCount).encode())
+                    my_socket.send(str(Time_Counter).encode())
                     running = False
                 elif event.key == K_UP:
                     req='up'
@@ -313,6 +332,9 @@ def main():
                 elif event.key == K_DOWN:
                     req='down'
             if event.type == QUIT:
+                Time_Counter = 0
+                my_socket.send(str(coinCount).encode())
+                my_socket.send(str(Time_Counter).encode())
                 pygame.quit()
                 sys.exit()
 
@@ -353,7 +375,7 @@ def main():
         for gh in user.ghosts:
             died = gh.ifTouched()
             if died=='died':
-                user.died_wait()
+                user.died_wait(Time_Counter)
             if died=='eaten':
                 gh.eatenBlue()
                 coinCount+=400
