@@ -33,6 +33,7 @@ class server:
                 switchToTime = False
             if Coins_Results[i]==maxCoins:
                 switchToTime=True
+        print(maxCoins)
         if switchToTime:
             maxTime=0
             maxCoinsTime=""
@@ -40,6 +41,7 @@ class server:
                 if Times_Results[i] > maxCoins:
                     maxTime = Times_Results[i]
                     maxCoinsTime = i
+                print(maxTime)
 
 def main():
     while True:
@@ -51,7 +53,7 @@ def main():
                 client_sockets.append(connection)
             else:
                 Result_Coins=current_socket.recv(MAX_MSG_LENGTH).decode() # כמה מטבעות קיבל הלקוח
-                if Result_Coins=="":
+                if Result_Coins==" ":
                     client_sockets.remove(current_socket)
                     current_socket.close()
                     continue
@@ -67,6 +69,7 @@ def main():
                     Times_Results[current_socket] = Result_Time
                     print(Result_Time, "Time")
                 Game = server(client_sockets, current_socket, Coins_Results,Times_Results)
+                Game.checkWinner()
 
 if __name__ == '__main__':
     main()
