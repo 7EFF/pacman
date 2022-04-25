@@ -7,8 +7,6 @@ pygame.mixer.init()
 from ghosts_class import *
 import time
 import socket
-import select
-import copy
 
 
 class PacMan:
@@ -31,12 +29,6 @@ class PacMan:
         self.sentData=False
 
     ###########################SET & GET###########################
-
-    def setSentData(self,SentData):
-        self.sentData=SentData
-
-    def setLeaveSpawnDelay(self,Delay):
-        self.leaveSpawnDelay=Delay
 
     def setMouthChange(self,mouthChange):
         self.mouthChange=mouthChange
@@ -87,6 +79,22 @@ class PacMan:
     ###########################MOVEMENT###########################
 
     ###########################GHOSTS###########################
+
+
+    def stopGrouping(self):
+        ghostsArray=[]
+        for gh in self.ghosts:
+            ghostsArray.append(gh)
+        i=0
+        while i<4:
+            i=i+1
+            R_diff=ghostsArray[0].getRow() - ghostsArray[1].getRow()
+            C_diff=ghostsArray[0].getCol()-ghostsArray[1].getCol()
+            if abs(R_diff)<0.5 or abs(C_diff)<0.5:
+                if ghostsArray[0].getBehavior()!='Random' and ghostsArray[0].getBehavior()!='Leave':
+                    ghostsArray[0].setBehavior('Random')
+
+
 
     def bigCoinEaten(self):
         for gh in self.ghosts:
@@ -149,35 +157,11 @@ class PacMan:
         textRect.center = (2*self.square, 17.5*self.square)
         self.screen.blit(text, textRect)
         self.move_Ghosts()
+        self.stopGrouping()
         pygame.display.flip()
         if coinsCount==0:
             self.winning(Time_Counter)
 
-    def winning(self,Time_Counter):
-        running = True
-        while running:
-            for event in pygame.event.get():
-                if event.type == KEYDOWN:
-                    if event.key == K_ESCAPE:
-                        pygame.quit()
-                        sys.exit()
-                    if event.type == QUIT:
-                        pygame.quit()
-                        sys.exit()
-                if event.type == QUIT:
-                    pygame.quit()
-                    sys.exit()
-            self.screen.fill((0, 0, 0))
-            Font = pygame.font.SysFont('arial black', 30)
-            text = Font.render('YOU WON THIS DUEL', True, (255, 255, 0))
-            textRect = text.get_rect()
-            textRect.center = (self.length / 2, self.width / 3)
-            self.screen.blit(text, textRect)
-            if self.sentData==False:
-                self.my_socket.send(str(self.coinCount).encode())
-                self.my_socket.send(str(Time_Counter).encode())
-                self.setSentData(True)
-            pygame.display.update()
 
     def Intro_Render(self):
         running = True
@@ -209,7 +193,7 @@ class PacMan:
                     sys.exit()
             pygame.display.update()
 
-    def died_wait(self,Time_Counter):
+    def died_wait(self, Time_Counter):
         fruit_Sound = mixer.Sound('Sounds\pacman_death.wav')
         fruit_Sound.set_volume(0.2)
         fruit_Sound.play()
@@ -231,9 +215,41 @@ class PacMan:
             self.screen.blit(text, textRect)
             if self.sentData == False:
                 self.my_socket.send(str(self.coinCount).encode())
+                time.sleep(0.05)
                 self.my_socket.send(str(Time_Counter).encode())
-                self.setSentData(True)
+                self.sentData=True
             pygame.display.update()
+            msg = self.my_socket.recv(1024).decode()
+            print(msg)
+
+    def winning(self, Time_Counter):
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type == KEYDOWN:
+                    if event.key == K_ESCAPE:
+                        pygame.quit()
+                        sys.exit()
+                    if event.type == QUIT:
+                        pygame.quit()
+                        sys.exit()
+                if event.type == QUIT:
+                    pygame.quit()
+                    sys.exit()
+            self.screen.fill((0, 0, 0))
+            Font = pygame.font.SysFont('arial black', 30)
+            text = Font.render('YOU WON THIS DUEL', True, (255, 255, 0))
+            textRect = text.get_rect()
+            textRect.center = (self.length / 2, self.width / 3)
+            self.screen.blit(text, textRect)
+            if self.sentData == False:
+                self.my_socket.send(str(self.coinCount).encode())
+                time.sleep(0.05)
+                self.my_socket.send(str(Time_Counter).encode())
+                self.sentData=True
+            pygame.display.update()
+            msg = self.my_socket.recv(1024).decode()
+            print(msg)
 
     ###########################DRAWING###########################
 
@@ -242,8 +258,8 @@ def main():
     my_socket.connect(('127.0.0.1', 5555))
     square = 25
     pacspeed=1/64
-    '''clock = pygame.time.Clock()
-    clock.tick(30)'''
+    clock = pygame.time.Clock()
+    clock.tick(30)
     from pygame.locals import (
         K_UP,
         K_DOWN,
@@ -305,13 +321,13 @@ def main():
     background = pygame.image.load('backGround.png').convert()
     background = pygame.transform.scale(background, (width, length))
     mouthChange=0
-    user = PacMan(my_socket,direction, gameBoard, square, screen, pacman,coinCount,length,width,pacspeed,eatGhosts,mouthChange)
+    user = PacMan(my_socket, direction, gameBoard, square, screen, pacman, coinCount, length, width, pacspeed,eatGhosts, mouthChange)
     #user.Intro_Render()
     user.make_Ghosts()
-    Time_Counter=1
+    Time_Counter = 1
     BigCoinChange=0
     while running:
-        Time_Counter+=1
+        Time_Counter +=1
         BigCoinChange+=1
         user.Board(background,BigCoinChange,Time_Counter)
         if BigCoinChange == 100:
@@ -319,9 +335,10 @@ def main():
         for event in pygame.event.get():
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
-                    Time_Counter=" "
-                    my_socket.send(str(coinCount).encode())
+                    my_socket.send(str(0).encode())
+                    time.sleep(0.05)
                     my_socket.send(str(Time_Counter).encode())
+                    my_socket.close()
                     running = False
                 elif event.key == K_UP:
                     req='up'
@@ -332,9 +349,10 @@ def main():
                 elif event.key == K_DOWN:
                     req='down'
             if event.type == QUIT:
-                Time_Counter = 0
-                my_socket.send(str(coinCount).encode())
+                my_socket.send(str(0).encode())
+                time.sleep(0.05)
                 my_socket.send(str(Time_Counter).encode())
+                my_socket.close()
                 pygame.quit()
                 sys.exit()
 
