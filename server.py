@@ -12,52 +12,54 @@ server_socket.bind((SERVER_IP, SERVER_PORT))
 server_socket.listen()
 print("Listening for clients...")
 client_sockets = []
-Coins_Results={}
-Times_Results={}
-Recieved_Clients={}
+Coins_Results = {}
+Times_Results = {}
+Recieved_Clients = {}
+
 
 class server:
-    def __init__(self,client_sockets,current_socket,Coins_Results,Times_Results):
+    def __init__(self, client_sockets, current_socket, Coins_Results, Times_Results):
         self.client_sockets = client_sockets
         self.current_socket = current_socket
-        self.Coins_Results=Coins_Results
-        self.Times_Results=Times_Results
+        self.Coins_Results = Coins_Results
+        self.Times_Results = Times_Results
 
     def print_client_sockets(self):
         for c in self.client_sockets:
             print(c.getpeername())
 
     def checkWinner(self):
-        maxCoins=0
-        maxCoinsClient=""
-        winner=""
-        switchToTime=False
+        maxCoins = 0
+        maxCoinsClient = ""
+        winner = ""
+        switchToTime = False
         for i in client_sockets:
-            if int(Coins_Results[i])>maxCoins:
-                maxCoins=int(Coins_Results[i])
-                maxCoinsClient=i
+            if int(Coins_Results[i]) > maxCoins:
+                maxCoins = int(Coins_Results[i])
+                maxCoinsClient = i
                 switchToTime = False
-                winner=i
-            if Coins_Results[i]==maxCoins:
-                switchToTime=True
+                winner = i
+            if Coins_Results[i] == maxCoins:
+                switchToTime = True
         print(maxCoins, "Max Coins")
         if switchToTime:
-            minTime=0
-            minTimeClient=""
+            minTime = 0
+            minTimeClient = ""
             for i in client_sockets:
                 if int(Times_Results[i]) < minTime:
                     minTime = Times_Results[i]
                     minTimeClient = i
                 print(minTime)
-                winner=i
-                
+                winner = i
+
         for c in client_sockets:
-            if c==winner:
-                msg="You have won !"
-                c.send(msg).encode()
+            if c == winner:
+                msg = "You have won !"
+                c.send(msg.encode())
             else:
                 msg = "You have lost"
-                c.send(msg).encode()
+                c.send(msg.encode())
+
 
 def main():
     while True:
@@ -67,32 +69,28 @@ def main():
                 connection, client_address = current_socket.accept()
                 print("New client joined!", client_address)
                 client_sockets.append(connection)
-                Recieved_Clients[connection]=False
+                Recieved_Clients[connection] = False
 
             else:
-                Result_Coins=current_socket.recv(MAX_MSG_LENGTH).decode() # כמה מטבעות קיבל הלקוח
+                Result_Coins = current_socket.recv(MAX_MSG_LENGTH).decode()  # כמה מטבעות קיבל הלקוח
 
-                if Result_Coins==" ":
+                if Result_Coins == 0:
                     client_sockets.remove(current_socket)
                     current_socket.close()
                     continue
                 else:
                     Coins_Results[current_socket] = Result_Coins
                     print(Result_Coins, "Coins")
-                Result_Time=current_socket.recv(MAX_MSG_LENGTH).decode() #כמה זמן סיים הלקוח
-                if Result_Time == 0:
-                    client_sockets.remove(current_socket)
-                    current_socket.close()
-                    continue
-                else:
-                    Recieved_Clients[current_socket] = True
-                    Times_Results[current_socket] = Result_Time
-                    print(Result_Time, "Time")
-                Game = server(client_sockets, current_socket, Coins_Results,Times_Results)
+                Result_Time = current_socket.recv(MAX_MSG_LENGTH).decode()  # כמה זמן סיים הלקוח
+                Recieved_Clients[current_socket] = True
+                Times_Results[current_socket] = Result_Time
+                print(Result_Time, "Time")
+                Game = server(client_sockets, current_socket, Coins_Results, Times_Results)
                 if not False in Recieved_Clients.values():
                     print('bulbul')
                     Game.checkWinner()
                     break
+
 
 if __name__ == '__main__':
     main()
