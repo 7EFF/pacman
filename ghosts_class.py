@@ -27,6 +27,9 @@ class Ghost:
         self.hunterDelay = 0
         self.ghostLeave = 0
 
+
+    ############## CHECKPOINTS ###################
+
     def ifTouched(self):
         if math.floor(self.row) == math.floor(self.main.pacman[0]) and math.ceil(self.main.pacman[1]) == math.ceil(
                 self.col) and self.main.eatGhosts == False:
@@ -43,6 +46,19 @@ class Ghost:
             return True
         return False
 
+    ############## CHECKPOINTS ###################
+
+    ############## SETS & GETS ###################
+
+    def getRow(self):
+        return self.row
+
+    def getCol(self):
+        return self.col
+
+    def getBehavior(self):
+        return self.ghostBehave
+
     def setLeaveSpawnDelay(self, Delay):
         self.ghostLeave = Delay
 
@@ -51,6 +67,10 @@ class Ghost:
 
     def setBehavior(self, NewBehave):
         self.ghostBehave = NewBehave
+
+    ############## SETS & GETS ###################
+
+    ############## MOVEMENT ###################
 
     def ableToTurn(self, direction):
         if self.canMove(self.row, math.floor(self.col - self.ghostspeed),0) and self.row % 1.0 == 0 and direction == 'left':
@@ -165,7 +185,6 @@ class Ghost:
                     delay = 1800
                 elif self.ogcolour == 'red':
                     delay = 2300
-                print(self.ghostLeave)
                 if self.ghostLeave == delay:
                     self.row = self.ogrow
                     self.col = self.ogcol
@@ -173,7 +192,7 @@ class Ghost:
                     self.setBehavior('Leave')
                     self.died = False
                     self.setLeaveSpawnDelay(0)
-                    self.ghostspeed=1/128
+                    self.ghostspeed=1/64
             if self.hunterDelay == 200:
                 self.setHuntDelay(0)
                 self.setBehavior('Hunt')
@@ -210,6 +229,10 @@ class Ghost:
             self.col = 0.015625
         return
 
+    ############## MOVEMENT ###################
+
+    ############## BLUE ###################
+
     def getColour(self):
         return self.colour
 
@@ -217,7 +240,7 @@ class Ghost:
         self.colour = 'blue'
         self.setBehavior('Run')
         self.movementBehaves()
-        self.ghostspeed = 1 / 256
+        self.ghostspeed = 1 / 128
         self.died = False
         self.blue=True
 
@@ -244,7 +267,7 @@ class Ghost:
 
     def blueOver(self):
         self.colour = self.ogcolour
-        self.ghostspeed = 1 / 128
+        self.ghostspeed = 1 / 64
         self.died = False
         self.blue = False
         self.setBehavior('Hunt')
@@ -255,6 +278,10 @@ class Ghost:
             self.direction = 'up'
             self.ghostBehave = 'Leave'
             self.movementBehaves()
+
+    ############## BLUE ###################
+
+    ############## DRAW ###################
 
     def DirForPic(self):
         if self.direction == 'up':
@@ -292,3 +319,5 @@ class Ghost:
         self.main.screen.blit(ghost_Pic, (
             math.floor(self.col * self.main.square), math.floor(self.row * self.main.square), self.main.square,
             self.main.square))
+
+    ############## DRAW ###################
