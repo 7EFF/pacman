@@ -50,6 +50,9 @@ class PacMan:
 
     ###########################SERVER###########################
 
+
+
+
     ###########################SERVER###########################
 
     ###########################MOVEMENT###########################
@@ -198,9 +201,9 @@ class PacMan:
             pygame.display.update()
 
     def died_wait(self, Time_Counter):
-        fruit_Sound = mixer.Sound('Sounds\pacman_death.wav')
-        fruit_Sound.set_volume(0.2)
-        fruit_Sound.play()
+        death_Sound = mixer.Sound('Sounds\pacman_death.wav')
+        death_Sound.set_volume(0.2)
+        death_Sound.play()
         self.RecievedData = False
         while True:
             rlist, slist, xlist = select.select([self.my_socket], [], [], 0.1)
@@ -220,7 +223,7 @@ class PacMan:
                 self.RecievedData=True
             if self.RecievedData == False:
                 msg = 'YOU DIED, WAITING FOR OPPONENT'
-            text = Font.render(msg, True, (255, 255, 0))
+            text = Font.render(msg, True, (255, 0, 0))
             textRect = text.get_rect()
             textRect.center = (self.length / 2, self.width / 2)
             self.screen.blit(text, textRect)
@@ -230,6 +233,32 @@ class PacMan:
                 time.sleep(0.05)
                 self.my_socket.send(str(Time_Counter).encode())
                 self.sentData=True
+            if msg =="You have lost":
+                for event in pygame.event.get():
+                    if event.type == KEYDOWN:
+                        if event.key == K_ESCAPE:
+                            self.my_socket.send(str(0).encode())
+                            time.sleep(0.05)
+                            self.my_socket.send(str(Time_Counter).encode())
+                            self.my_socket.close()
+                        
+                    if event.type == QUIT:
+                        self.my_socket.send(str(0).encode())
+                        time.sleep(0.05)
+                        self.my_socket.send(str(Time_Counter).encode())
+                        self.my_socket.close()
+                        pygame.quit()
+                        sys.exit()
+                Font = pygame.font.SysFont('arial black', 30)
+                text = Font.render('PRESS Q TO QUEUE AGAIN', True, (255, 255, 0))
+                textRect = text.get_rect()
+                textRect.center = (self.length / 2, self.width / 2.5)
+                self.screen.blit(text, textRect)
+                text = Font.render('PRESS S TO SPECTATE', True, (255, 255, 0))
+                textRect = text.get_rect()
+                textRect.center = (self.length / 2, self.width / 1.5)
+                self.screen.blit(text, textRect)
+                pygame.display.update()
 
 
     def winning(self, Time_Counter):
