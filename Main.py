@@ -7,7 +7,7 @@ pygame.mixer.init()
 from ghosts_class import *
 import time
 import socket
-
+import select
 
 class PacMan:
     def __init__(self,my_socket,direction,gameBoard,square,screen,pacman,coinCount,length,width,pacspeed,eatGhosts,mouthChange):
@@ -27,6 +27,7 @@ class PacMan:
         self.mouthChange=mouthChange
         self.ghostLeave=0
         self.sentData=False
+        self.RecievedData=False
 
     ###########################SET & GET###########################
 
@@ -47,6 +48,9 @@ class PacMan:
 
     ###########################SET & GET###########################
 
+    ###########################SERVER###########################
+
+    ###########################SERVER###########################
 
     ###########################MOVEMENT###########################
 
@@ -197,8 +201,9 @@ class PacMan:
         fruit_Sound = mixer.Sound('Sounds\pacman_death.wav')
         fruit_Sound.set_volume(0.2)
         fruit_Sound.play()
-
+        self.RecievedData = False
         while True:
+            rlist, slist, xlist = select.select([self.my_socket], [], [], 0.1)
             for event in pygame.event.get():
                 if event.type == KEYDOWN:
                     if event.key == K_ESCAPE:
@@ -209,22 +214,28 @@ class PacMan:
                     sys.exit()
             self.screen.fill((0, 0, 0))
             Font = pygame.font.SysFont('arial black', 30)
-            text = Font.render('YOU DIED, WAITING FOR OPPONENT', True, (255, 255, 0))
+            for s in rlist:
+                msg = s.recv(1024).decode()
+                print(msg)
+                self.RecievedData=True
+            if self.RecievedData == False:
+                msg = 'YOU DIED, WAITING FOR OPPONENT'
+            text = Font.render(msg, True, (255, 255, 0))
             textRect = text.get_rect()
             textRect.center = (self.length / 2, self.width / 2)
             self.screen.blit(text, textRect)
+            pygame.display.update()
             if self.sentData == False:
                 self.my_socket.send(str(self.coinCount).encode())
                 time.sleep(0.05)
                 self.my_socket.send(str(Time_Counter).encode())
                 self.sentData=True
-            pygame.display.update()
-            msg = self.my_socket.recv(1024).decode()
-            print(msg)
+
 
     def winning(self, Time_Counter):
         running = True
         while running:
+            rlist, slist, xlist = select.select([self.my_socket], [], [], 0.1)
             for event in pygame.event.get():
                 if event.type == KEYDOWN:
                     if event.key == K_ESCAPE:
@@ -238,9 +249,15 @@ class PacMan:
                     sys.exit()
             self.screen.fill((0, 0, 0))
             Font = pygame.font.SysFont('arial black', 30)
-            text = Font.render('YOU WON THIS DUEL', True, (255, 255, 0))
+            for s in rlist:
+                msg = s.recv(1024).decode()
+                print(msg)
+                self.RecievedData=True
+            if self.RecievedData == False:
+                msg = 'YOU HAVE EATEN EVERY COIN, WAITING FOR RESULT'
+            text = Font.render(msg, True, (255, 255, 0))
             textRect = text.get_rect()
-            textRect.center = (self.length / 2, self.width / 3)
+            textRect.center = (self.length / 2, self.width / 5)
             self.screen.blit(text, textRect)
             if self.sentData == False:
                 self.my_socket.send(str(self.coinCount).encode())
@@ -322,101 +339,129 @@ def main():
     background = pygame.transform.scale(background, (width, length))
     mouthChange=0
     user = PacMan(my_socket, direction, gameBoard, square, screen, pacman, coinCount, length, width, pacspeed,eatGhosts, mouthChange)
-    #user.Intro_Render()
-    user.make_Ghosts()
+    user.Intro_Render()
     Time_Counter = 1
     BigCoinChange=0
     while running:
-        Time_Counter +=1
-        BigCoinChange+=1
-        user.Board(background,BigCoinChange,Time_Counter)
-        if BigCoinChange == 100:
-            BigCoinChange = 0
-        for event in pygame.event.get():
-            if event.type == KEYDOWN:
-                if event.key == K_ESCAPE:
+        if user.RecievedData==False:
+            Font = pygame.font.SysFont('arial black', 30)
+            text = Font.render('WAITING FOR ANOTHER PERSON', True, (255, 255, 0))
+            textRect = text.get_rect()
+            textRect.center = (length / 2, width / 2)
+            screen.blit(text, textRect)
+            pygame.display.update()
+            for event in pygame.event.get():
+                if event.type == KEYDOWN:
+                    if event.key == K_ESCAPE:
+                        my_socket.send(str(0).encode())
+                        time.sleep(0.05)
+                        my_socket.send(str(Time_Counter).encode())
+                        my_socket.close()
+                        running = False
+                if event.type == QUIT:
                     my_socket.send(str(0).encode())
                     time.sleep(0.05)
                     my_socket.send(str(Time_Counter).encode())
                     my_socket.close()
-                    running = False
-                elif event.key == K_UP:
-                    req='up'
-                elif event.key == K_RIGHT:
-                    req='right'
-                elif event.key == K_LEFT:
-                    req='left'
-                elif event.key == K_DOWN:
-                    req='down'
-            if event.type == QUIT:
-                my_socket.send(str(0).encode())
-                time.sleep(0.05)
-                my_socket.send(str(Time_Counter).encode())
-                my_socket.close()
-                pygame.quit()
-                sys.exit()
+                    pygame.quit()
+                    sys.exit()
+            rlist, slist, xlist = select.select([user.my_socket], [], [], 0.1)
+            for s in rlist:
+                msg = s.recv(1024).decode()
+                print(msg)
+                user.RecievedData = True
+                user.make_Ghosts()
+        else:
+            Time_Counter +=1
+            BigCoinChange+=1
+            user.Board(background,BigCoinChange,Time_Counter)
+            if BigCoinChange == 100:
+                BigCoinChange = 0
+            for event in pygame.event.get():
+                if event.type == KEYDOWN:
+                    if event.key == K_ESCAPE:
+                        my_socket.send(str(0).encode())
+                        time.sleep(0.05)
+                        my_socket.send(str(Time_Counter).encode())
+                        my_socket.close()
+                        running = False
+                    elif event.key == K_UP:
+                        req='up'
+                    elif event.key == K_RIGHT:
+                        req='right'
+                    elif event.key == K_LEFT:
+                        req='left'
+                    elif event.key == K_DOWN:
+                        req='down'
+                if event.type == QUIT:
+                    my_socket.send(str(0).encode())
+                    time.sleep(0.05)
+                    my_socket.send(str(Time_Counter).encode())
+                    my_socket.close()
+                    pygame.quit()
+                    sys.exit()
 
-        if req=='up':
-            if (user.canMove(math.floor(pacman[0] - pacspeed), pacman[1]) and pacman[1]%1.0 ==0):
-                direction='up'
-        if req=='right':
-            if (user.canMove(pacman[0], math.ceil(pacman[1] + pacspeed)) and pacman[0]%1.0 ==0):
-                direction='right'
-        if req=='left':
-            if (user.canMove(pacman[0], math.floor(pacman[1] - pacspeed)) and pacman[0]%1.0 ==0):
-                direction='left'
-        if req=='down':
-            if (user.canMove(math.ceil(pacman[0] + pacspeed), pacman[1]) and pacman[1]%1.0 ==0):
-                direction='down'
-        pacman[0], pacman[1] = user.move(direction, pacman[0], pacman[1])
-        if pacman[1]<0.015625 and direction=='left':
-            pacman[0], pacman[1] = user.move(direction, pacman[0], 27.484375)
-        if pacman[1]>26.984375 and direction=='right':
-            pacman[0], pacman[1] = user.move(direction, pacman[0], 0.015625)
-            gameBoard[int(pacman[0])][27] = 2
-        if gameBoard[int(pacman[0])][int(pacman[1])] == 1:
-            coinCount += 10
-            gameBoard[int(pacman[0])][int(pacman[1])] = 2
-            if pygame.mixer.get_busy()==False:
-                eating_Sound= mixer.Sound('Sounds\pacman_chomp.wav')
-                eating_Sound.set_volume(0.5)
-                eating_Sound.play()
-        if gameBoard[int(pacman[0])][int(pacman[1])] == 3:
-            coinCount+= 200
-            gameBoard[int(pacman[0])][int(pacman[1])] = 2
-            fruit_Sound = mixer.Sound('Sounds\pacman_eatfruit.wav')
-            fruit_Sound.set_volume(0.6)
-            fruit_Sound.play()
-            user.bigCoinEaten()
-            eatGhosts=True
-            blueCounter=0
-        for gh in user.ghosts:
-            died = gh.ifTouched()
-            if died=='died':
-                user.died_wait(Time_Counter)
-            if died=='eaten':
-                gh.eatenBlue()
-                coinCount+=400
-                eat_ghost = mixer.Sound('Sounds\pacman_eatghost.wav')
-                eat_ghost.set_volume(0.6)
-                eat_ghost.play()
-        if eatGhosts:
-            if blueCounter==3000:
-                for gh in user.ghosts:
-                    gh.blueOver()
+            if req=='up':
+                if (user.canMove(math.floor(pacman[0] - pacspeed), pacman[1]) and pacman[1]%1.0 ==0):
+                    direction='up'
+            if req=='right':
+                if (user.canMove(pacman[0], math.ceil(pacman[1] + pacspeed)) and pacman[0]%1.0 ==0):
+                    direction='right'
+            if req=='left':
+                if (user.canMove(pacman[0], math.floor(pacman[1] - pacspeed)) and pacman[0]%1.0 ==0):
+                    direction='left'
+            if req=='down':
+                if (user.canMove(math.ceil(pacman[0] + pacspeed), pacman[1]) and pacman[1]%1.0 ==0):
+                    direction='down'
+            pacman[0], pacman[1] = user.move(direction, pacman[0], pacman[1])
+            if pacman[1]<0.015625 and direction=='left':
+                pacman[0], pacman[1] = user.move(direction, pacman[0], 27.484375)
+            if pacman[1]>26.984375 and direction=='right':
+                pacman[0], pacman[1] = user.move(direction, pacman[0], 0.015625)
+                gameBoard[int(pacman[0])][27] = 2
+            if gameBoard[int(pacman[0])][int(pacman[1])] == 1:
+                coinCount += 10
+                gameBoard[int(pacman[0])][int(pacman[1])] = 2
+                if pygame.mixer.get_busy()==False:
+                    eating_Sound= mixer.Sound('Sounds\pacman_chomp.wav')
+                    eating_Sound.set_volume(0.5)
+                    eating_Sound.play()
+            if gameBoard[int(pacman[0])][int(pacman[1])] == 3:
+                coinCount+= 200
+                gameBoard[int(pacman[0])][int(pacman[1])] = 2
+                fruit_Sound = mixer.Sound('Sounds\pacman_eatfruit.wav')
+                fruit_Sound.set_volume(0.6)
+                fruit_Sound.play()
+                user.bigCoinEaten()
+                eatGhosts=True
                 blueCounter=0
-                eatGhosts=False
-            if blueCounter >= 2200 and blueCounter % 160 == 0:
-                for gh in user.ghosts:
-                    if gh.getDied()==False:
-                        gh.flickerToBLUE()
-            if blueCounter >= 2200 and blueCounter % 160 == 80:
-                for gh in user.ghosts:
-                    gh.flickerToOG()
-            blueCounter+=1
-        user.setPacMan(pacman)
-        user.setCoinCount(coinCount)
-        user.setDirection(direction)
-        user.setEatGhosts(eatGhosts)
+            for gh in user.ghosts:
+                died = gh.ifTouched()
+                if died=='died':
+                    user.died_wait(Time_Counter)
+                if died=='eaten':
+                    gh.eatenBlue()
+                    coinCount+=400
+                    eat_ghost = mixer.Sound('Sounds\pacman_eatghost.wav')
+                    eat_ghost.set_volume(0.6)
+                    eat_ghost.play()
+            if eatGhosts:
+                if blueCounter==3000:
+                    for gh in user.ghosts:
+                        gh.blueOver()
+                    blueCounter=0
+                    eatGhosts=False
+                if blueCounter >= 2200 and blueCounter % 160 == 0:
+                    for gh in user.ghosts:
+                        if gh.getDied()==False:
+                            gh.flickerToBLUE()
+                if blueCounter >= 2200 and blueCounter % 160 == 80:
+                    for gh in user.ghosts:
+                        gh.flickerToOG()
+                blueCounter+=1
+            user.setPacMan(pacman)
+            user.setCoinCount(coinCount)
+            user.setDirection(direction)
+            user.setEatGhosts(eatGhosts)
 if __name__ == '__main__':
     main()
