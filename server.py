@@ -16,7 +16,6 @@ Coins_Results = {}
 Times_Results = {}
 Recieved_Clients = {}
 
-
 class server:
     def __init__(self, client_sockets, current_socket, Coins_Results, Times_Results):
         self.client_sockets = client_sockets
@@ -62,6 +61,7 @@ class server:
 
 
 def main():
+    Number_Clients=0
     while True:
         rlist, wlist, xlist = select.select([server_socket] + client_sockets, client_sockets, [])
         for current_socket in rlist:
@@ -70,10 +70,12 @@ def main():
                 print("New client joined!", client_address)
                 client_sockets.append(connection)
                 Recieved_Clients[connection] = False
-
+                if len(client_sockets) >= 2:
+                    for c in client_sockets:
+                        msg = "You can start"
+                        c.send(msg.encode())
             else:
                 Result_Coins = current_socket.recv(MAX_MSG_LENGTH).decode()  # כמה מטבעות קיבל הלקוח
-
                 if Result_Coins == 0:
                     client_sockets.remove(current_socket)
                     current_socket.close()
@@ -87,7 +89,6 @@ def main():
                 print(Result_Time, "Time")
                 Game = server(client_sockets, current_socket, Coins_Results, Times_Results)
                 if not False in Recieved_Clients.values():
-                    print('bulbul')
                     Game.checkWinner()
                     break
 
