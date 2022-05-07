@@ -177,8 +177,7 @@ class PacMan:
             self.winning(Time_Counter)
 
     def Intro_Render(self):
-        running = True
-        while running:
+        while 1:
             self.screen.fill((0, 0, 0))
             player = pygame.image.load("intro_pic.png")
             player = pygame.transform.scale(player, (self.width, self.length))
@@ -213,7 +212,7 @@ class PacMan:
         death_Sound.set_volume(0.2)
         death_Sound.play()
         self.RecievedData = False
-        while True:
+        while 1:
             rlist, slist, xlist = select.select([self.my_socket], [], [], 0.1)
             for event in pygame.event.get():
                 if event.type == KEYDOWN:
@@ -269,8 +268,7 @@ class PacMan:
                 pygame.display.update()
 
     def winning(self, Time_Counter):
-        running = True
-        while running:
+        while 1:
             rlist, slist, xlist = select.select([self.my_socket], [], [], 0.1)
             for event in pygame.event.get():
                 if event.type == KEYDOWN:
@@ -367,7 +365,6 @@ def main():
     pacman = [23, 13.5]
     pygame.display.set_caption("PacMan-Final Project")
     direction = 'up'
-    running = True
     coinCount = 0
     req = 'up'
     blueCounter = 0
@@ -380,7 +377,7 @@ def main():
     my_socket.send("go".encode())
     Time_Counter = 1
     BigCoinChange = 0
-    while running:
+    while 1:
         if user.RecievedData == False:
             Font = pygame.font.SysFont('arial black', 30)
             text = Font.render('WAITING FOR ANOTHER PERSON', True, (255, 255, 0))
