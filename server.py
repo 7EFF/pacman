@@ -1,6 +1,7 @@
 import socket
 import select
 import time
+import threading
 
 MAX_MSG_LENGTH = 1024
 SERVER_PORT = 5555
@@ -62,18 +63,23 @@ class server:
 
 def main():
     Number_Clients=0
+    Waiting_Room=[]
     while True:
         rlist, wlist, xlist = select.select([server_socket] + client_sockets, client_sockets, [])
         for current_socket in rlist:
             if current_socket is server_socket:
                 connection, client_address = current_socket.accept()
                 print("New client joined!", client_address)
-                client_sockets.append(connection)
-                Recieved_Clients[connection] = False
-                if len(client_sockets) >= 2:
-                    for c in client_sockets:
-                        msg = "You can start"
-                        c.send(msg.encode())
+                Request = connection.recv(MAX_MSG_LENGTH).decode()
+                if Request=="go":
+                    client_sockets.append(connection)
+                    Waiting_Room.append(connection)
+                    Recieved_Clients[connection] = False
+                    if len(Waiting_Room) == 2:
+                        for c in client_sockets:
+                            msg = "You can start"
+                            c.send(msg.encode())
+                        Waiting_Room.clear()
             else:
                 Result_Coins = current_socket.recv(MAX_MSG_LENGTH).decode()  # כמה מטבעות קיבל הלקוח
                 if Result_Coins == 0:
