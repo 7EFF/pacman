@@ -15,18 +15,39 @@ print("Listening for clients...")
 client_sockets = []
 Coins_Results = {}
 Times_Results = {}
-Recieved_Clients = {}
+
 
 class server:
-    def __init__(self, client_sockets, current_socket, Coins_Results, Times_Results):
+
+    def __init__(self, client_sockets, current_socket, Coins_Results, Times_Results, Recieved_Clients):
         self.client_sockets = client_sockets
         self.current_socket = current_socket
         self.Coins_Results = Coins_Results
         self.Times_Results = Times_Results
+        self.Recieved_Clients=Recieved_Clients
+
+    def get_Recieved_Clients(self):
+        return self.Recieved_Clients
 
     def print_client_sockets(self):
         for c in self.client_sockets:
             print(c.getpeername())
+
+    def Game(self):
+        for c in self.client_sockets:
+            Result_Coins = c.recv(MAX_MSG_LENGTH).decode()  # כמה מטבעות קיבל הלקוח
+            if Result_Coins == 0:
+                client_sockets.remove(c)
+                c.close()
+                continue
+            else:
+                Coins_Results[c] = Result_Coins
+                print(Result_Coins, "Coins")
+            Result_Time = c.recv(MAX_MSG_LENGTH).decode()  # כמה זמן סיים הלקוח
+            Times_Results[c] = Result_Time
+            print(Result_Time, "Time")
+            self.Recieved_Clients[c] = True
+        return
 
     def checkWinner(self):
         maxCoins = 0
@@ -62,9 +83,10 @@ class server:
 
 
 def main():
+    Recieved_Clients = {}
     Number_Clients=0
     Waiting_Room=[]
-    while True:
+    while 1:
         rlist, wlist, xlist = select.select([server_socket] + client_sockets, client_sockets, [])
         for current_socket in rlist:
             if current_socket is server_socket:
@@ -79,24 +101,12 @@ def main():
                         for c in client_sockets:
                             msg = "You can start"
                             c.send(msg.encode())
-                        Waiting_Room.clear()
-            else:
-                Result_Coins = current_socket.recv(MAX_MSG_LENGTH).decode()  # כמה מטבעות קיבל הלקוח
-                if Result_Coins == 0:
-                    client_sockets.remove(current_socket)
-                    current_socket.close()
-                    continue
-                else:
-                    Coins_Results[current_socket] = Result_Coins
-                    print(Result_Coins, "Coins")
-                Result_Time = current_socket.recv(MAX_MSG_LENGTH).decode()  # כמה זמן סיים הלקוח
-                Recieved_Clients[current_socket] = True
-                Times_Results[current_socket] = Result_Time
-                print(Result_Time, "Time")
-                Game = server(client_sockets, current_socket, Coins_Results, Times_Results)
-                if not False in Recieved_Clients.values():
-                    Game.checkWinner()
-                    break
+                        Lobby = server(Waiting_Room, current_socket, Coins_Results, Times_Results,Recieved_Clients)
+                        #Waiting_Room.clear()
+                        x = threading.Thread(target=Lobby.Game())
+                        x.start()
+                        if not False in Lobby.Recieved_Clients.values():
+                            Lobby.checkWinner()
 
 
 if __name__ == '__main__':
