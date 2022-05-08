@@ -2,6 +2,7 @@ import socket
 import select
 import time
 import threading
+import pickle
 
 MAX_MSG_LENGTH = 1024
 SERVER_PORT = 5555
@@ -35,18 +36,18 @@ class server:
 
     def Game(self):
         for c in self.client_sockets:
-            Result_Coins = c.recv(MAX_MSG_LENGTH).decode()  # כמה מטבעות קיבל הלקוח
-            if Result_Coins == 0:
+            data_from_client = pickle.loads(c.recv(2048))# מקבל את המטבעות ואת הזמן של הלקוח
+            Result_Coins, Result_Time=data_from_client
+            if Result_Coins == -1:
                 client_sockets.remove(c)
                 c.close()
                 continue
             else:
                 Coins_Results[c] = Result_Coins
                 print(Result_Coins, "Coins")
-            Result_Time = c.recv(MAX_MSG_LENGTH).decode()  # כמה זמן סיים הלקוח
             Times_Results[c] = Result_Time
             print(Result_Time, "Time")
-            self.Recieved_Clients[c] = True
+            self.Recieved_Clients[c] = True #מסמן שאותו לקוח שלח את כל מה שהיה צריך לשלוח
         return
 
     def checkWinner(self):
@@ -92,21 +93,23 @@ def main():
             if current_socket is server_socket:
                 connection, client_address = current_socket.accept()
                 print("New client joined!", client_address)
-                Request = connection.recv(MAX_MSG_LENGTH).decode()
+                Request = connection.recv(MAX_MSG_LENGTH).decode()#מקבל את הבקשה מאחד הלקוחות. שחקן, צופה או לשחק עוד הפעם
                 if Request=="go":
                     client_sockets.append(connection)
                     Waiting_Room.append(connection)
                     Recieved_Clients[connection] = False
                     if len(Waiting_Room) == 2:
-                        for c in client_sockets:
+                        Lobby = server(Waiting_Room, current_socket, Coins_Results, Times_Results,Recieved_Clients)#יוצר את המשחק הכללי
+                        for c in Waiting_Room:
                             msg = "You can start"
-                            c.send(msg.encode())
-                        Lobby = server(Waiting_Room, current_socket, Coins_Results, Times_Results,Recieved_Clients)
-                        #Waiting_Room.clear()
-                        x = threading.Thread(target=Lobby.Game())
+                            c.send(msg.encode()) #שולח לכל שחקן שהוא יכול להתחיל לשחק
+                        x = threading.Thread(target=Lobby.Game()) #יוצר משחק בין שני אנשים
                         x.start()
+                        Waiting_Room.clear()
+                        x.join()
+                        #print(Lobby.Recieved_Clients.values())
                         if not False in Lobby.Recieved_Clients.values():
-                            Lobby.checkWinner()
+                            Lobby.checkWinner()#בודק מי ניצח באחד המשחקים
 
 
 if __name__ == '__main__':
