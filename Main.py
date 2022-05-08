@@ -308,8 +308,7 @@ class PacMan:
 
 
 def main():
-    my_socket = socket.socket()
-    my_socket.connect(('127.0.0.1', 5555))
+
     square = 25
     pacspeed = 1 / 64
     clock = pygame.time.Clock()
@@ -374,8 +373,10 @@ def main():
     background = pygame.image.load('backGround.png').convert()
     background = pygame.transform.scale(background, (width, length))
     mouthChange = 0
+    my_socket = socket.socket()
     user = PacMan(my_socket, direction, gameBoard, square, screen, pacman, coinCount, length, width, pacspeed,eatGhosts, mouthChange)
     user.Intro_Render()
+    my_socket.connect(('127.0.0.1', 5555))
     my_socket.send("go".encode())
     Time_Counter = 1
     BigCoinChange = 0
