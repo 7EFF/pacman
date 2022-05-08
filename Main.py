@@ -1,4 +1,4 @@
-import sys, os, pygame
+import sys, os, pygame,pickle
 
 pygame.init()
 from pygame import mixer
@@ -236,9 +236,11 @@ class PacMan:
             self.screen.blit(text, textRect)
             pygame.display.update()
             if self.sentData == False:
-                self.my_socket.send(str(self.coinCount).encode())
+                data_to_send = (self.coinCount,Time_Counter)
+                self.my_socket.send(pickle.dumps(data_to_send))
+                '''self.my_socket.send(str(self.coinCount).encode())
                 time.sleep(0.05)
-                self.my_socket.send(str(Time_Counter).encode())
+                self.my_socket.send(str(Time_Counter).encode())'''
                 self.sentData = True
             if msg == "You have lost":
                 for event in pygame.event.get():
@@ -251,7 +253,7 @@ class PacMan:
 
                     if event.type == QUIT:
                         self.my_socket.send(str(0).encode())
-                        time.sleep(0.05)
+                        time.sleep(0.5)
                         self.my_socket.send(str(Time_Counter).encode())
                         self.my_socket.close()
                         pygame.quit()
