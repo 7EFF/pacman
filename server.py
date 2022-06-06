@@ -26,6 +26,7 @@ class server:
         self.Coins_Results = {}
         self.Times_Results = {}
         self.Recieved_Clients=Recieved_Clients
+        self.QueueAgain=[]
 
     def get_Recieved_Clients(self):
         return self.Recieved_Clients
@@ -33,6 +34,9 @@ class server:
     def print_client_sockets(self):
         for c in self.client_sockets:
             print(c.getpeername())
+
+    def get_QueueAgain(self):
+        return self.QueueAgain
 
     def Game(self):
         for c in self.client_sockets:
@@ -58,13 +62,13 @@ class server:
         winner = ""
         switchToTime = False
         for i in self.client_sockets:
+            if self.Coins_Results[i] == maxCoins:
+                switchToTime = True
             if int(self.Coins_Results[i]) > maxCoins:
                 maxCoins = int(self.Coins_Results[i])
                 maxCoinsClient = i
                 switchToTime = False
                 winner = i
-            if self.Coins_Results[i] == maxCoins:
-                switchToTime = True
         print(maxCoins, "Max Coins")
         if switchToTime:
             minTime = 0
@@ -75,7 +79,7 @@ class server:
                     minTimeClient = i
                 winner = i
         print(minTime, "Min Time")
-
+        losers_list =[]
         for c in self.client_sockets:
             if c == winner:
                 msg = "You have won !"
@@ -83,7 +87,11 @@ class server:
             else:
                 msg = "You have lost"
                 c.send(msg.encode())
-
+                losers_list.append(c)
+        for L in losers_list:
+            req = L.recv(1024).decode()
+            print(req)
+            losers_list.remove(L)
 
 def main():
     Recieved_Clients = {}
@@ -105,6 +113,7 @@ def main():
                         for c in Waiting_Room:
                             msg = "You can start"
                             c.send(msg.encode()) #שולח לכל שחקן שהוא יכול להתחיל לשחק
+                            time.sleep(0.05)
                         Players=int(len(Waiting_Room)/2)
                         for i in range(Players):
                             Game_list = Waiting_Room[0],Waiting_Room[1]
@@ -113,6 +122,7 @@ def main():
                             x.start()
                             Waiting_Room.remove(Waiting_Room[1])
                             Waiting_Room.remove(Waiting_Room[0])
+
 
 
 if __name__ == '__main__':
