@@ -238,7 +238,6 @@ class PacMan:
                         pygame.quit()
                         sys.exit()
                     if event.key == K_q and msg == "You have lost":
-                        print("bulbul")
                         self.my_socket.send("Queue Again".encode())
                         self.my_socket.close()
                         self.Queue_Again=True
@@ -271,8 +270,10 @@ class PacMan:
                 self.sentData = True
             if msg == "You have lost":
                 if printed_Money==False:
-                    self.wager = math.floor(0.5 * self.wager)
-                    print("Your balance is now:",self.balance + self.wager)
+                    self.balance = self.balance - self.wager
+                    reward = math.floor(0.5 * self.wager)
+                    self.balance = self.balance + reward
+                    print("Your balance is now:", self.balance)
                     printed_Money = True
                 for event in pygame.event.get():
                     if event.type == KEYDOWN:
@@ -300,8 +301,10 @@ class PacMan:
                 pygame.display.update()
             if msg == "You have won !":
                 if printed_Money==False:
-                    self.wager = math.floor(1.5 * self.wager)
-                    print("Your balance is now:",self.balance + self.wager)
+                    self.balance = self.balance - self.wager
+                    reward = math.floor(1.5 * self.wager)
+                    self.balance = self.balance + reward
+                    print("Your balance is now:", self.balance)
                     printed_Money = True
 
 
@@ -348,8 +351,10 @@ class PacMan:
                 self.sentData = True
             if msg == "You have lost":
                 if printed_Money==False:
-                    self.wager = math.floor(0.75 * self.wager)
-                    print("Your balance is now:",self.balance + self.wager)
+                    self.balance = self.balance - self.wager
+                    reward = math.floor(0.75 * self.wager)
+                    self.balance = self.balance + reward
+                    print("Your balance is now:", self.balance)
                     printed_Money = True
                 for event in pygame.event.get():
                     if event.type == KEYDOWN:
@@ -377,18 +382,19 @@ class PacMan:
                 pygame.display.update()
             if msg == "You have won !":
                 if printed_Money==False:
-                    self.wager = math.floor(2*self.wager)
-                    print("Your balance is now:",self.balance+self.wager)
+                    self.balance = self.balance - self.wager
+                    reward = math.floor(2*self.wager)
+                    self.balance = self.balance+reward
+                    print("Your balance is now:",self.balance)
                     printed_Money = True
 
 ###########################END_OF_GAME###########################
 
 
 def main():
-    money=1000
+    balance=1000
     wager = int(input("Your balance is 1000$, how much would you like to bet?"))
-    money=money-wager
-    print("Your balance is now", money)
+    print("Your balance is now", balance-wager)
     square = 20
     pacspeed = 1 / 64
     clock = pygame.time.Clock()
@@ -454,7 +460,7 @@ def main():
     background = pygame.transform.scale(background, (width, length))
     mouthChange = 0
     my_socket = socket.socket()
-    user = PacMan(my_socket, direction, gameBoard, square, screen, pacman, coinCount, length, width, pacspeed,eatGhosts, mouthChange,wager,money)
+    user = PacMan(my_socket, direction, gameBoard, square, screen, pacman, coinCount, length, width, pacspeed,eatGhosts, mouthChange,wager,balance)
     user.Intro_Render()
     my_socket.connect(('127.0.0.1', 5555))
     my_socket.send("go".encode())
@@ -606,7 +612,8 @@ def main():
                             [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, ],
                             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ]
                         ]
-                        user = PacMan(my_socket, direction, gameBoard, square, screen, pacman, coinCount, length, width,pacspeed, eatGhosts, mouthChange,wager,money)
+                        print(user.balance)
+                        user = PacMan(my_socket, direction, gameBoard, square, screen, pacman, coinCount, length, width,pacspeed, eatGhosts, mouthChange,user.wager,user.balance)
                 if died == 'eaten':
                     gh.eatenBlue()
                     coinCount += 400
