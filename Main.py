@@ -190,9 +190,9 @@ class PacMan:
     def Intro_Render(self):
         while 1:
             self.screen.fill((0, 0, 0))
-            player = pygame.image.load("intro_pic.png")
-            player = pygame.transform.scale(player, (self.width, self.length))
-            self.screen.blit(player, (0, 0))
+            intro_img = pygame.image.load("intro_pic.png")
+            intro_img = pygame.transform.scale(intro_img, (self.width, self.length))
+            self.screen.blit(intro_img, (0, 0))
             for event in pygame.event.get():
                 if event.type == KEYDOWN:
                     if event.key == K_ESCAPE:
@@ -217,6 +217,107 @@ class PacMan:
                     pygame.quit()
                     sys.exit()
             pygame.display.update()
+
+    def button(self,screen, position, text):
+        font = pygame.font.SysFont("Arial", 50)
+        text_render = font.render(text, True, (255, 0, 0))
+        x, y, w, h = text_render.get_rect()
+        x, y = position
+        pygame.draw.line(screen, (150, 150, 150), (x, y), (x + w, y), 5)
+        pygame.draw.line(screen, (150, 150, 150), (x, y - 2), (x, y + h), 5)
+        pygame.draw.line(screen, (50, 50, 50), (x, y + h), (x + w, y + h), 5)
+        pygame.draw.line(screen, (50, 50, 50), (x + w, y + h), [x + w, y], 5)
+        pygame.draw.rect(screen, (100, 100, 100), (x, y, w, h))
+        return screen.blit(text_render, (x, y))
+
+    def wager_screen(self):
+        string=""
+        isStupid=False
+        running=True
+        while 1:
+            self.screen.fill((0,0,30))
+            for event in pygame.event.get():
+                if event.type == KEYDOWN:
+                    if event.key == K_ESCAPE:
+                        pygame.quit()
+                        sys.exit()
+                    elif event.key == pygame.K_BACKSPACE:
+                        string = string[:-1]
+                    elif event.key == pygame.K_SPACE:
+                        running =True
+                        self.wager=int(string)
+                        if int(self.wager)<=self.balance:
+                            self.screen.fill((0, 0, 30))
+                            b1 = self.button(self.screen, (400, 400), "Change")
+                            b2 = self.button(self.screen, (100, 400), "Continue")
+                            while running:
+                                for event in pygame.event.get():
+                                    if event.type == KEYDOWN:
+                                        if event.key == K_ESCAPE:
+                                            pygame.quit()
+                                            sys.exit()
+                                    if event.type == pygame.MOUSEBUTTONDOWN:
+                                        if b1.collidepoint(pygame.mouse.get_pos()):
+                                            string=""
+                                            running=False
+                                            break
+                                        elif b2.collidepoint(pygame.mouse.get_pos()):
+                                            return
+                                    if event.type == QUIT:
+                                        pygame.quit()
+                                        sys.exit()
+                                Font = pygame.font.SysFont('arial black', int(self.square * 1.5))
+                                msg="Your wager is: "
+                                msg+=string
+                                text = Font.render(msg, True, (255, 0, 0))
+                                textRect = text.get_rect()
+                                textRect.center = (self.length / 2, self.width / 5)
+                                self.screen.blit(text, textRect)
+                                msg = "Your Balance is now: "
+                                msg += str(self.balance-self.wager)
+                                text = Font.render(msg, True, (255, 0, 0))
+                                textRect = text.get_rect()
+                                textRect.center = (self.length / 2, self.width / 2.5)
+                                self.screen.blit(text, textRect)
+                                text = Font.render("Want to continue?", True, (255, 0, 0))
+                                textRect = text.get_rect()
+                                textRect.center = (self.length / 2, self.width / 1.5)
+                                self.screen.blit(text, textRect)
+                                pygame.display.update()
+                        else:
+                            isStupid=True
+                    else:
+                        string +=event.unicode
+                if event.type == QUIT:
+                    pygame.quit()
+                    sys.exit()
+            Font = pygame.font.SysFont('arial black', int(self.square*1.5))
+            text = Font.render(string, True, (255, 0, 0))
+            textRect = text.get_rect()
+            textRect.center = (self.length / 2+10, self.width / 2)
+            self.screen.blit(text, textRect)
+            text = Font.render("Wager:", True, (255, 0, 0))
+            textRect = text.get_rect()
+            textRect.center = (60, self.width / 2)
+            self.screen.blit(text, textRect)
+            prt = "Balance: "
+            prt += str(self.balance)
+            text = Font.render(prt, True, (255, 0, 0))
+            textRect = text.get_rect()
+            textRect.center = (150, 50)
+            self.screen.blit(text, textRect)
+            if isStupid==True:
+                text = Font.render("Your wager was higher", True, (255, 0, 0))
+                textRect = text.get_rect()
+                textRect.center = (200, 400)
+                self.screen.blit(text, textRect)
+                text = Font.render("than Your balance", True, (255, 0, 0))
+                textRect = text.get_rect()
+                textRect.center = (200, 450)
+                self.screen.blit(text, textRect)
+            pygame.display.update()
+
+
 
     ###########################DRAWING###########################
 
@@ -393,8 +494,9 @@ class PacMan:
 
 def main():
     balance=1000
-    wager = int(input("Your balance is 1000$, how much would you like to bet?"))
-    print("Your balance is now", balance-wager)
+    '''wager = int(input("Your balance is 1000$, how much would you like to bet?"))
+    print("Your balance is now", balance-wager)'''
+
     square = 20
     pacspeed = 1 / 64
     clock = pygame.time.Clock()
@@ -460,7 +562,9 @@ def main():
     background = pygame.transform.scale(background, (width, length))
     mouthChange = 0
     my_socket = socket.socket()
+    wager=0
     user = PacMan(my_socket, direction, gameBoard, square, screen, pacman, coinCount, length, width, pacspeed,eatGhosts, mouthChange,wager,balance)
+    user.wager_screen()
     user.Intro_Render()
     my_socket.connect(('127.0.0.1', 5555))
     my_socket.send("go".encode())
@@ -510,13 +614,13 @@ def main():
                         my_socket.send(str(Time_Counter).encode())
                         my_socket.close()
                         running = False
-                    elif event.key == K_UP:
+                    elif event.key == K_UP or event.key == K_w:
                         req = 'up'
-                    elif event.key == K_RIGHT:
+                    elif event.key == K_RIGHT or event.key == K_d:
                         req = 'right'
-                    elif event.key == K_LEFT:
+                    elif event.key == K_LEFT or event.key == K_a:
                         req = 'left'
-                    elif event.key == K_DOWN:
+                    elif event.key == K_DOWN or event.key == K_s:
                         req = 'down'
                 if event.type == QUIT:
                     my_socket.send(str(0).encode())
@@ -565,6 +669,8 @@ def main():
                 if died == 'died':
                     user.died_wait(Time_Counter)
                     if user.Queue_Again==True:
+                        if user.wager>user.balance:
+                            user.wager_screen()
                         user.Intro_Render()
                         my_socket = socket.socket()
                         my_socket.connect(('127.0.0.1', 5555))
@@ -612,7 +718,6 @@ def main():
                             [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, ],
                             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ]
                         ]
-                        print(user.balance)
                         user = PacMan(my_socket, direction, gameBoard, square, screen, pacman, coinCount, length, width,pacspeed, eatGhosts, mouthChange,user.wager,user.balance)
                 if died == 'eaten':
                     gh.eatenBlue()
