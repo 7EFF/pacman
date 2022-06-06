@@ -166,7 +166,8 @@ class Ghost:
         if self.canMove(math.ceil(self.row + self.ghostspeed), self.col,
                         index) and self.col % 1.0 == 0 and self.direction != 'up':
             possibleTurn.append('down')
-        self.direction = random.choice(possibleTurn)
+        if len(possibleTurn)>0:
+            self.direction = random.choice(possibleTurn)
         self.move()
 
     def movementBehaves(self):
