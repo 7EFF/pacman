@@ -27,9 +27,16 @@ class server:
         self.Times_Results = {}
         self.Recieved_Clients=Recieved_Clients
         self.QueueAgain=[]
+        self.winners_list=[]
 
     def get_Recieved_Clients(self):
         return self.Recieved_Clients
+
+    def get_winners_list(self):
+        return self.winners_list
+
+    def set_Game_list(self,Game_list):
+        self.client_sockets=Game_list
 
     def print_client_sockets(self):
         for c in self.client_sockets:
@@ -51,7 +58,6 @@ class server:
             self.Times_Results[c] = Result_Time
             print(Result_Time, "Time")
             self.Recieved_Clients[c] = True #מסמן שאותו לקוח שלח את כל מה שהיה צריך לשלוח
-
         self.checkWinner()  # בודק מי ניצח באחד המשחקים
         return
 
@@ -77,13 +83,16 @@ class server:
                 if int(self.Times_Results[i]) < minTime:
                     minTime = self.Times_Results[i]
                     minTimeClient = i
-                winner = i
+                    winner = i
         print(minTime, "Min Time")
         losers_list =[]
         for c in self.client_sockets:
             if c == winner:
-                msg = "You have won !"
+                msg = "You have won this duel!"
                 c.send(msg.encode())
+                self.winners_list.append(c)
+                if all(self.Recieved_Clients.values())==True:
+                    self.checkIfGameOver()
             else:
                 msg = "You have lost"
                 c.send(msg.encode())
@@ -92,6 +101,16 @@ class server:
             req = L.recv(1024).decode()
             print(req)
             losers_list.remove(L)
+
+    def checkIfGameOver(self):
+        if len(self.winners_list)==1:
+            msg = "You have won this game!!"
+            self.winners_list[0].send(msg.encode())
+        else:
+            for c in self.winners_list:
+                msg = "You will fight the other winner soon"
+                c.send(msg.encode())
+
 
 def main():
     Recieved_Clients = {}
@@ -109,19 +128,20 @@ def main():
                     client_sockets.append(connection)
                     Waiting_Room.append(connection)
                     Recieved_Clients[connection] = False
+                    Lobby = server(client_sockets, current_socket, Recieved_Clients)  # יוצר את המשחק הכללי
                     if len(Waiting_Room) >= 2:
                         for c in Waiting_Room:
                             msg = "You can start"
                             c.send(msg.encode()) #שולח לכל שחקן שהוא יכול להתחיל לשחק
-                            time.sleep(0.05)
                         Players=int(len(Waiting_Room)/2)
                         for i in range(Players):
                             Game_list = Waiting_Room[0],Waiting_Room[1]
-                            Lobby = server(Game_list, current_socket, Recieved_Clients)  # יוצר את המשחק הכללי
+                            Lobby.set_Game_list(Game_list)
                             x = threading.Thread(target=Lobby.Game) #יוצר משחק בין שני אנשים
                             x.start()
                             Waiting_Room.remove(Waiting_Room[1])
                             Waiting_Room.remove(Waiting_Room[0])
+                        Lobby.checkIfGameOver()
 
 
 
