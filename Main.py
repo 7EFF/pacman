@@ -16,7 +16,7 @@ import select
 
 class PacMan:
     def __init__(self, my_socket, direction, gameBoard, square, screen, pacman, coinCount, length, width, pacspeed,
-                 eatGhosts, mouthChange,wager,balance):
+                 eatGhosts, mouthChange,wager,balance,has_died,all_eaten):
         self.my_socket = my_socket
         self.direction = direction
         self.gameBoard = gameBoard
@@ -37,6 +37,9 @@ class PacMan:
         self.wager=wager
         self.balance=balance
         self.Queue_Again=False
+        self.nextGame=False
+        self.has_died=has_died
+        self.all_eaten=all_eaten
 
     ###########################SET & GET###########################
 
@@ -61,11 +64,10 @@ class PacMan:
     def setEatGhosts(self, eatGhost):
         self.eatGhosts = eatGhost
 
+    def getWager(self):
+        return self.wager
+
     ###########################SET & GET###########################
-
-    ###########################SERVER###########################
-
-    ###########################SERVER###########################
 
     ###########################MOVEMENT###########################
 
@@ -186,6 +188,71 @@ class PacMan:
         pygame.display.flip()
         if coinsCount == 0:
             self.winning(Time_Counter)
+            self.died_wait(Time_Counter)  # אם אכל את הכל
+            self.screen.fill((0, 0, 0))  # ממשיך לכאן במקרה ויצא מwinning
+            back_img = pygame.image.load("end_background.jpg")
+            back_img = pygame.transform.scale(back_img, (self.width, self.length))
+            self.screen.blit(back_img, (0, 0))
+            pygame.display.update()
+            if self.nextGame == True:  # אם ניצח
+                rlist, slist, xlist = select.select([self.my_socket], [], [], 0.1)
+                for s in rlist:
+                    msg = s.recv(1024).decode()
+                    print(msg)
+                    self.nextGame = False
+            if self.Queue_Again == True:  # אם הפסיד ורוצה לשחק במשחק חדש
+                self.wager_screen()
+                my_socket = socket.socket()
+                my_socket.connect(('127.0.0.1', 5555))
+                self.set_My_socket(my_socket)
+                self.Queue_Again = False
+            self.Intro_Render()
+            self.my_socket.send("go".encode())
+            print("sent message")
+            pacman = [23, 13.5]
+            direction = 'up'
+            coinCount = 0
+            req = 'up'
+            blueCounter = 0
+            eatGhosts = False
+            mouthChange = 0
+            Time_Counter = 1
+            BigCoinChange = 0
+            gameBoard = [
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+                [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, ],
+                [0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, ],
+                [0, 3, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, ],
+                [0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, ],
+                [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, ],
+                [0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, ],
+                [0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, ],
+                [0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, ],
+                [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+                [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+                [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 5, 5, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+                [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 4, 4, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+                [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 2, 2, 2, 2, 2, 2, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, ],
+                [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 2, 2, 2, 2, 2, 2, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+                [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+                [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+                [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+                [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+                [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, ],
+                [0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, ],
+                [0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, ],
+                [0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 3, 0, 0, 0, 0, ],
+                [0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, ],
+                [0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, ],
+                [0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, ],
+                [0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, ],
+                [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, ],
+                [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, ],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ]
+            ]
+            user = PacMan(self.my_socket, direction, gameBoard, self.square, self.screen, pacman, coinCount, self.length, self.width, self.pacspeed,eatGhosts, mouthChange, self.wager, self.balance,False,True)
+            user.RecievedData = False
 
     def Intro_Render(self):
         while 1:
@@ -375,8 +442,6 @@ class PacMan:
             if msg == "You have lost":
                 if printed_Money==False:
                     self.balance = self.balance - self.wager
-                    reward = math.floor(0.5 * self.wager)
-                    self.balance = self.balance + reward
                     print("Your balance is now:", self.balance)
                     printed_Money = True
                 for event in pygame.event.get():
@@ -405,15 +470,7 @@ class PacMan:
                 pygame.display.update()
             if msg == "You have won this duel!":
                 time.sleep(1)
-                return
-            if msg == "You have won this game!!":
-                if printed_Money == False:
-                    self.balance = self.balance - self.wager
-                    reward = math.floor(2 * self.wager)
-                    self.balance = self.balance + reward
-                    print("Your balance is now:", self.balance)
-                    printed_Money = True
-            if msg == "You will fight the other winner soon":
+                self.nextGame=True
                 return
 
 
@@ -459,9 +516,6 @@ class PacMan:
                 self.sentData = True
             if msg == "You have lost":
                 if printed_Money==False:
-                    self.balance = self.balance - self.wager
-                    reward = math.floor(0.75 * self.wager)
-                    self.balance = self.balance + reward
                     print("Your balance is now:", self.balance)
                     printed_Money = True
                 for event in pygame.event.get():
@@ -489,15 +543,7 @@ class PacMan:
                 self.screen.blit(text, textRect)
                 pygame.display.update()
             if msg == "You have won this duel!":
-                return
-            if msg == "You have won this game!!":
-                if printed_Money==False:
-                    self.balance = self.balance - self.wager
-                    reward = math.floor(2*self.wager)
-                    self.balance = self.balance+reward
-                    print("Your balance is now:",self.balance)
-                    printed_Money = True
-            if msg == "You will fight the other winner soon":
+                self.nextGame = True
                 return
 
 ###########################END_OF_GAME###########################
@@ -505,9 +551,6 @@ class PacMan:
 
 def main():
     balance=1000
-    '''wager = int(input("Your balance is 1000$, how much would you like to bet?"))
-    print("Your balance is now", balance-wager)'''
-
     square = 20
     pacspeed = 1 / 64
     clock = pygame.time.Clock()
@@ -574,8 +617,9 @@ def main():
     mouthChange = 0
     my_socket = socket.socket()
     wager=0
-    user = PacMan(my_socket, direction, gameBoard, square, screen, pacman, coinCount, length, width, pacspeed,eatGhosts, mouthChange,wager,balance)
+    user = PacMan(my_socket, direction, gameBoard, square, screen, pacman, coinCount, length, width, pacspeed,eatGhosts, mouthChange,wager,balance,False,False)
     user.wager_screen()
+    wager = user.getWager()
     user.Intro_Render()
     my_socket.connect(('127.0.0.1', 5555))
     my_socket.send("go".encode())
@@ -608,10 +652,49 @@ def main():
             rlist, slist, xlist = select.select([user.my_socket], [], [], 0.1)
             for s in rlist:
                 msg = s.recv(1024).decode()
-                print("gotten message")
-                print(msg)
                 user.RecievedData = True
                 user.make_Ghosts()
+                if msg=="You can start":
+                    user.has_died = False
+                    user.all_eaten = False
+                    continue
+                if msg =="You have won the Entire game!!":
+                    if user.has_died==True:
+                        balance = balance - wager
+                        reward = math.floor(2 * wager)
+                        balance = balance + reward
+                        print("Your balance is now:", balance) #התוצאה אם לא אכל את כל המטבעות
+                    if user.all_eaten==True:
+                        balance = balance - wager
+                        reward = math.floor(3.5 * wager)
+                        balance = balance + reward
+                        print("Your balance is now:", balance)# התוצאה אם המפה נקייה ממטבעות
+                    while 1:
+                        for event in pygame.event.get():
+                            if event.type == KEYDOWN:
+                                if event.key == K_ESCAPE:
+                                    my_socket.send(str(0).encode())
+                                    time.sleep(0.05)
+                                    my_socket.send(str(Time_Counter).encode())
+                                    my_socket.close()
+                                    running = False
+                            if event.type == QUIT:
+                                my_socket.send(str(0).encode())
+                                time.sleep(0.05)
+                                my_socket.send(str(Time_Counter).encode())
+                                my_socket.close()
+                                pygame.quit()
+                                sys.exit()
+                        screen.fill((0, 0, 0))
+                        back_img = pygame.image.load("end_background.jpg")
+                        back_img = pygame.transform.scale(back_img, (width, length))
+                        screen.blit(back_img, (0, 0))
+                        Font = pygame.font.SysFont('arial black', int(1.5 * square))
+                        text = Font.render(msg, True, (255, 0, 0))
+                        textRect = text.get_rect()
+                        textRect.center = (length / 2, width / 2)
+                        screen.blit(text, textRect)
+                        pygame.display.update() #מדפיס שסיים את המשחק
         else:
             Time_Counter += 1
             BigCoinChange += 1
@@ -621,7 +704,7 @@ def main():
             for event in pygame.event.get():
                 if event.type == KEYDOWN:
                     if event.key == K_ESCAPE:
-                        my_socket.send(str(0).encode())
+                        my_socket.send(str(-1).encode())
                         time.sleep(0.05)
                         my_socket.send(str(Time_Counter).encode())
                         my_socket.close()
@@ -635,7 +718,7 @@ def main():
                     elif event.key == K_DOWN or event.key == K_s:
                         req = 'down'
                 if event.type == QUIT:
-                    my_socket.send(str(0).encode())
+                    my_socket.send(str(-1).encode())
                     time.sleep(0.05)
                     my_socket.send(str(Time_Counter).encode())
                     my_socket.close()
@@ -679,12 +762,24 @@ def main():
             for gh in user.ghosts:
                 died = gh.ifTouched()
                 if died == 'died':
-                    user.died_wait(Time_Counter)
-                    if user.Queue_Again==True:
+                    user.died_wait(Time_Counter)#אם נהרג
+                    screen.fill((0, 0, 0))#ממשיך לכאן במקרה ויצא מdied_wait
+                    back_img = pygame.image.load("end_background.jpg")
+                    back_img = pygame.transform.scale(back_img, (width, length))
+                    screen.blit(back_img, (0, 0))
+                    pygame.display.update()
+                    if user.nextGame==True:#אם ניצח
+                        rlist, slist, xlist = select.select([user.my_socket], [], [], 0.1)
+                        for s in rlist:
+                            msg = s.recv(1024).decode()
+                            print(msg)
+                            user.nextGame=False
+                    if user.Queue_Again==True:#אם הפסיד ורוצה לשחק במשחק חדש
                         user.wager_screen()
                         my_socket = socket.socket()
                         my_socket.connect(('127.0.0.1', 5555))
                         user.set_My_socket(my_socket)
+                        user.Queue_Again=False
                     user.Intro_Render()
                     my_socket.send("go".encode())
                     print("sent message")
@@ -730,7 +825,7 @@ def main():
                         [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, ],
                         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ]
                     ]
-                    user = PacMan(my_socket, direction, gameBoard, square, screen, pacman, coinCount, length, width,pacspeed, eatGhosts, mouthChange,user.wager,user.balance)
+                    user = PacMan(my_socket, direction, gameBoard, square, screen, pacman, coinCount, length, width,pacspeed, eatGhosts, mouthChange,user.wager,user.balance,True,False)
                     user.RecievedData=False
                 if died == 'eaten':
                     gh.eatenBlue()
