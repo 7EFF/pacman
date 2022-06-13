@@ -246,7 +246,7 @@ class PacMan:
                         sys.exit()
                     elif event.key == pygame.K_BACKSPACE:
                         string = string[:-1]
-                    elif event.key == pygame.K_SPACE:
+                    elif event.key == pygame.K_SPACE and string!="":
                         running =True
                         self.wager=int(string)
                         if int(self.wager)<=self.balance:
@@ -289,7 +289,7 @@ class PacMan:
                                 pygame.display.update()
                         else:
                             isStupid=True
-                    else:
+                    if event.key== K_1 or event.key== K_2 or event.key== K_3 or event.key== K_4 or event.key== K_5 or event.key== K_6 or event.key== K_7 or event.key== K_8 or event.key== K_9 or event.key== K_0:
                         string +=event.unicode
                 if event.type == QUIT:
                     pygame.quit()
@@ -404,7 +404,8 @@ class PacMan:
                 self.screen.blit(text, textRect)
                 pygame.display.update()
             if msg == "You have won this duel!":
-                self.my_socket.recv(1024).decode()
+                time.sleep(1)
+                return
             if msg == "You have won this game!!":
                 if printed_Money == False:
                     self.balance = self.balance - self.wager
@@ -455,9 +456,6 @@ class PacMan:
             if self.sentData == False:
                 data_to_send = (self.coinCount, Time_Counter)
                 self.my_socket.send(pickle.dumps(data_to_send))
-                '''self.my_socket.send(str(self.coinCount).encode())
-                time.sleep(0.05)
-                self.my_socket.send(str(Time_Counter).encode())'''
                 self.sentData = True
             if msg == "You have lost":
                 if printed_Money==False:
@@ -491,7 +489,7 @@ class PacMan:
                 self.screen.blit(text, textRect)
                 pygame.display.update()
             if msg == "You have won this duel!":
-                self.my_socket.recv(1024).decode()
+                return
             if msg == "You have won this game!!":
                 if printed_Money==False:
                     self.balance = self.balance - self.wager
@@ -610,6 +608,7 @@ def main():
             rlist, slist, xlist = select.select([user.my_socket], [], [], 0.1)
             for s in rlist:
                 msg = s.recv(1024).decode()
+                print("gotten message")
                 print(msg)
                 user.RecievedData = True
                 user.make_Ghosts()
@@ -683,11 +682,12 @@ def main():
                     user.died_wait(Time_Counter)
                     if user.Queue_Again==True:
                         user.wager_screen()
-                        user.Intro_Render()
                         my_socket = socket.socket()
                         my_socket.connect(('127.0.0.1', 5555))
-                        my_socket.send("go".encode())
                         user.set_My_socket(my_socket)
+                    user.Intro_Render()
+                    my_socket.send("go".encode())
+                    print("sent message")
                     pacman = [23, 13.5]
                     direction = 'up'
                     coinCount = 0
@@ -731,6 +731,7 @@ def main():
                         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ]
                     ]
                     user = PacMan(my_socket, direction, gameBoard, square, screen, pacman, coinCount, length, width,pacspeed, eatGhosts, mouthChange,user.wager,user.balance)
+                    user.RecievedData=False
                 if died == 'eaten':
                     gh.eatenBlue()
                     coinCount += 400
