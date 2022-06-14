@@ -1,22 +1,44 @@
 import pickle
 import pygame
 import sys
-
 pygame.init()
 from pygame import mixer
 from pygame.locals import *
-
 pygame.font.init()
 pygame.mixer.init()
 from ghosts_class import *
 import time
 import socket
 import select
+from sqlalchemy import create_engine,Column,Integer,String
+from sqlalchemy.orm import  sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
 
+
+engine = create_engine('mysql://root:Jt202004@localhost:3306/players_data',echo=False)
+
+Session= sessionmaker(bind=engine)
+session = Session()
+Base = declarative_base()
+
+class Users(Base):
+    __tablename__ = 'user'
+    id = Column(Integer,primary_key=True)
+    name = Column(String(50))
+    password = Column(String(50))
+    balance = Column(Integer)
+    games_played = Column(Integer)
+    games_won = Column(Integer)
+
+    def __init__(self,name, password, balance, games_played, games_won):
+        self.name=name
+        self.password = password
+        self.balance = balance
+        self.games_played = games_played
+        self.games_won = games_won
 
 class PacMan:
-    def __init__(self, my_socket, direction, gameBoard, square, screen, pacman, coinCount, length, width, pacspeed,
-                 eatGhosts, mouthChange,wager,balance,has_died,all_eaten):
+    def __init__(self, my_socket, direction, gameBoard, square, screen, pacman, coinCount, length, width, pacspeed,eatGhosts, mouthChange,wager,balance,has_died,all_eaten,user):
         self.my_socket = my_socket
         self.direction = direction
         self.gameBoard = gameBoard
@@ -40,11 +62,9 @@ class PacMan:
         self.nextGame=False
         self.has_died=has_died
         self.all_eaten=all_eaten
+        self.user=user
 
     ###########################SET & GET###########################
-
-    #def setAsDefault(self):
-
 
     def set_My_socket(self,my_socket):
         self.my_socket=my_socket
@@ -161,18 +181,12 @@ class PacMan:
         for i in range(len(self.gameBoard[0])):
             for j in range(len(self.gameBoard[1])):
                 if self.gameBoard[i][j] == 1:
-                    pygame.draw.circle(self.screen, [248, 152, 128],
-                                       (j * self.square + self.square / 2, i * self.square + self.square / 2),
-                                       self.square / 5)
+                    pygame.draw.circle(self.screen, [248, 152, 128],(j * self.square + self.square / 2, i * self.square + self.square / 2),self.square / 5)
                     coinsCount += 1
                 elif self.gameBoard[i][j] == 2:
-                    pygame.draw.circle(self.screen, [0, 0, 0],
-                                       (j * self.square + self.square / 2, i * self.square + self.square / 2),
-                                       self.square / 3)
+                    pygame.draw.circle(self.screen, [0, 0, 0],(j * self.square + self.square / 2, i * self.square + self.square / 2),self.square / 3)
                 elif self.gameBoard[i][j] == 3 and BigCoinChange < 50:
-                    pygame.draw.circle(self.screen, [248, 152, 128],
-                                       (j * self.square + self.square / 2, i * self.square + self.square / 2),
-                                       self.square / 2)
+                    pygame.draw.circle(self.screen, [248, 152, 128],(j * self.square + self.square / 2, i * self.square + self.square / 2),self.square / 2)
                 else:
                     self.g_pos.append([i, j])
         if self.mouthChange == 100:
@@ -444,6 +458,8 @@ class PacMan:
                     self.balance = self.balance - self.wager
                     print("Your balance is now:", self.balance)
                     printed_Money = True
+                    self.user.balance = self.balance
+                    session.commit()
                 for event in pygame.event.get():
                     if event.type == KEYDOWN:
                         if event.key == K_ESCAPE:
@@ -518,6 +534,8 @@ class PacMan:
                 if printed_Money==False:
                     print("Your balance is now:", self.balance)
                     printed_Money = True
+                    self.user.balance = self.balance
+                    session.commit()
                 for event in pygame.event.get():
                     if event.type == KEYDOWN:
                         if event.key == K_ESCAPE:
@@ -550,7 +568,30 @@ class PacMan:
 
 
 def main():
+    user=[]
     balance=1000
+    correctPassword=False
+    signing = input("Would you like to log in or sign up? ")
+    if signing=="log in":
+        username = input("Enter name")
+        user = session.query(Users).filter(Users.name == username).first()
+        while correctPassword==False:
+            passcode = input("Enter password")
+            if user.password==passcode:
+                print("Welcome back ",user.name)
+                balance=user.balance
+                correctPassword=True
+            else:
+                print("wrong password, try again")
+    elif signing == "sign up":
+        username = input("Enter name")
+        passcode = input("Enter password")
+        user = Users(name=username, password=passcode, balance=1000, games_played=5, games_won=2)
+        session.add(user)
+        session.commit()
+        print("Welcome to PacMan", username)
+    else:
+        return
     square = 20
     pacspeed = 1 / 64
     clock = pygame.time.Clock()
@@ -617,16 +658,16 @@ def main():
     mouthChange = 0
     my_socket = socket.socket()
     wager=0
-    user = PacMan(my_socket, direction, gameBoard, square, screen, pacman, coinCount, length, width, pacspeed,eatGhosts, mouthChange,wager,balance,False,False)
-    user.wager_screen()
-    wager = user.getWager()
-    user.Intro_Render()
+    player = PacMan(my_socket, direction, gameBoard, square, screen, pacman, coinCount, length, width, pacspeed,eatGhosts, mouthChange,wager,balance,False,False,user)
+    player.wager_screen()
+    wager = player.getWager()
+    player.Intro_Render()
     my_socket.connect(('127.0.0.1', 5555))
     my_socket.send("go".encode())
     Time_Counter = 1
     BigCoinChange = 0
     while 1:
-        if user.RecievedData == False:
+        if player.RecievedData == False:
             Font = pygame.font.SysFont('arial black', int(square))
             text = Font.render('WAITING FOR ANOTHER PERSON', True, (255, 255, 0))
             textRect = text.get_rect()
@@ -649,26 +690,30 @@ def main():
                     pygame.quit()
                     sys.exit()
 
-            rlist, slist, xlist = select.select([user.my_socket], [], [], 0.1)
+            rlist, slist, xlist = select.select([player.my_socket], [], [], 0.1)
             for s in rlist:
                 msg = s.recv(1024).decode()
-                user.RecievedData = True
-                user.make_Ghosts()
+                player.RecievedData = True
+                player.make_Ghosts()
                 if msg=="You can start":
-                    user.has_died = False
-                    user.all_eaten = False
+                    player.has_died = False
+                    player.all_eaten = False
                     continue
                 if msg =="You have won the Entire game!!":
-                    if user.has_died==True:
+                    if player.has_died==True:
                         balance = balance - wager
                         reward = math.floor(2 * wager)
                         balance = balance + reward
                         print("Your balance is now:", balance) #התוצאה אם לא אכל את כל המטבעות
-                    if user.all_eaten==True:
+                        user.balance=balance
+                        session.commit()
+                    if player.all_eaten==True:
                         balance = balance - wager
                         reward = math.floor(3.5 * wager)
                         balance = balance + reward
                         print("Your balance is now:", balance)# התוצאה אם המפה נקייה ממטבעות
+                        user.balance = balance
+                        session.commit()
                     while 1:
                         for event in pygame.event.get():
                             if event.type == KEYDOWN:
@@ -698,7 +743,7 @@ def main():
         else:
             Time_Counter += 1
             BigCoinChange += 1
-            user.Board(background, BigCoinChange, Time_Counter)
+            player.Board(background, BigCoinChange, Time_Counter)
             if BigCoinChange == 100:
                 BigCoinChange = 0
             for event in pygame.event.get():
@@ -726,22 +771,22 @@ def main():
                     sys.exit()
 
             if req == 'up':
-                if (user.canMove(math.floor(pacman[0] - pacspeed), pacman[1]) and pacman[1] % 1.0 == 0):
+                if (player.canMove(math.floor(pacman[0] - pacspeed), pacman[1]) and pacman[1] % 1.0 == 0):
                     direction = 'up'
             if req == 'right':
-                if (user.canMove(pacman[0], math.ceil(pacman[1] + pacspeed)) and pacman[0] % 1.0 == 0):
+                if (player.canMove(pacman[0], math.ceil(pacman[1] + pacspeed)) and pacman[0] % 1.0 == 0):
                     direction = 'right'
             if req == 'left':
-                if (user.canMove(pacman[0], math.floor(pacman[1] - pacspeed)) and pacman[0] % 1.0 == 0):
+                if (player.canMove(pacman[0], math.floor(pacman[1] - pacspeed)) and pacman[0] % 1.0 == 0):
                     direction = 'left'
             if req == 'down':
-                if (user.canMove(math.ceil(pacman[0] + pacspeed), pacman[1]) and pacman[1] % 1.0 == 0):
+                if (player.canMove(math.ceil(pacman[0] + pacspeed), pacman[1]) and pacman[1] % 1.0 == 0):
                     direction = 'down'
-            pacman[0], pacman[1] = user.move(direction, pacman[0], pacman[1])
+            pacman[0], pacman[1] = player.move(direction, pacman[0], pacman[1])
             if pacman[1] < 0.015625 and direction == 'left':
-                pacman[0], pacman[1] = user.move(direction, pacman[0], 27.484375)
+                pacman[0], pacman[1] = player.move(direction, pacman[0], 27.484375)
             if pacman[1] > 26.984375 and direction == 'right':
-                pacman[0], pacman[1] = user.move(direction, pacman[0], 0.015625)
+                pacman[0], pacman[1] = player.move(direction, pacman[0], 0.015625)
                 gameBoard[int(pacman[0])][27] = 2
             if gameBoard[int(pacman[0])][int(pacman[1])] == 1:
                 coinCount += 10
@@ -756,31 +801,31 @@ def main():
                 fruit_Sound = mixer.Sound('Sounds\pacman_eatfruit.wav')
                 fruit_Sound.set_volume(0.6)
                 fruit_Sound.play()
-                user.bigCoinEaten()
+                player.bigCoinEaten()
                 eatGhosts = True
                 blueCounter = 0
-            for gh in user.ghosts:
+            for gh in player.ghosts:
                 died = gh.ifTouched()
                 if died == 'died':
-                    user.died_wait(Time_Counter)#אם נהרג
+                    player.died_wait(Time_Counter)#אם נהרג
                     screen.fill((0, 0, 0))#ממשיך לכאן במקרה ויצא מdied_wait
                     back_img = pygame.image.load("end_background.jpg")
                     back_img = pygame.transform.scale(back_img, (width, length))
                     screen.blit(back_img, (0, 0))
                     pygame.display.update()
-                    if user.nextGame==True:#אם ניצח
-                        rlist, slist, xlist = select.select([user.my_socket], [], [], 0.1)
+                    if player.nextGame==True:#אם ניצח
+                        rlist, slist, xlist = select.select([player.my_socket], [], [], 0.1)
                         for s in rlist:
                             msg = s.recv(1024).decode()
                             print(msg)
-                            user.nextGame=False
-                    if user.Queue_Again==True:#אם הפסיד ורוצה לשחק במשחק חדש
-                        user.wager_screen()
+                            player.nextGame=False
+                    if player.Queue_Again==True:#אם הפסיד ורוצה לשחק במשחק חדש
+                        player.wager_screen()
                         my_socket = socket.socket()
                         my_socket.connect(('127.0.0.1', 5555))
-                        user.set_My_socket(my_socket)
-                        user.Queue_Again=False
-                    user.Intro_Render()
+                        player.set_My_socket(my_socket)
+                        player.Queue_Again=False
+                    player.Intro_Render()
                     my_socket.send("go".encode())
                     print("sent message")
                     pacman = [23, 13.5]
@@ -825,8 +870,8 @@ def main():
                         [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, ],
                         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ]
                     ]
-                    user = PacMan(my_socket, direction, gameBoard, square, screen, pacman, coinCount, length, width,pacspeed, eatGhosts, mouthChange,user.wager,user.balance,True,False)
-                    user.RecievedData=False
+                    player = PacMan(my_socket, direction, gameBoard, square, screen, pacman, coinCount, length, width,pacspeed, eatGhosts, mouthChange,player.wager,player.balance,True,False,user)
+                    player.RecievedData=False
                 if died == 'eaten':
                     gh.eatenBlue()
                     coinCount += 400
@@ -835,22 +880,22 @@ def main():
                     eat_ghost.play()
             if eatGhosts:
                 if blueCounter == 3000:
-                    for gh in user.ghosts:
+                    for gh in player.ghosts:
                         gh.blueOver()
                     blueCounter = 0
                     eatGhosts = False
                 if blueCounter >= 2200 and blueCounter % 160 == 0:
-                    for gh in user.ghosts:
+                    for gh in player.ghosts:
                         if gh.getDied() == False:
                             gh.flickerToBLUE()
                 if blueCounter >= 2200 and blueCounter % 160 == 80:
-                    for gh in user.ghosts:
+                    for gh in player.ghosts:
                         gh.flickerToOG()
                 blueCounter += 1
-            user.setPacMan(pacman)
-            user.setCoinCount(coinCount)
-            user.setDirection(direction)
-            user.setEatGhosts(eatGhosts)
+            player.setPacMan(pacman)
+            player.setCoinCount(coinCount)
+            player.setDirection(direction)
+            player.setEatGhosts(eatGhosts)
 
 
 if __name__ == '__main__':
