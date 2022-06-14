@@ -3,6 +3,42 @@ import select
 import time
 import threading
 import pickle
+from sqlalchemy import create_engine,Column,Integer,String
+from sqlalchemy.orm import  sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
+key = ""
+
+engine = create_engine('mysql://root:Jt202004@localhost:3306/players_data',echo=False)
+
+Session= sessionmaker(bind=engine)
+session = Session()
+Base = declarative_base()
+
+class Users(Base):
+    __tablename__ = 'user'
+    id = Column(Integer,primary_key=True)
+    name = Column(String(50))
+    password = Column(String(50))
+    balance = Column(Integer)
+    games_played = Column(Integer)
+    games_won = Column(Integer)
+
+    def __init__(self,name, password, balance, games_played, games_won):
+        self.name=name
+        self.password = password
+        self.balance = balance
+        self.games_played = games_played
+        self.games_won = games_won
+
+'''user1 = Users(name = "teff",password="jt202004",balance = 1000, games_played = 5,games_won = 2)
+session.add(user1)
+session.commit()'''
+
+users = session.query(Users)
+for user in users:
+    print (user.id,user.name,user.password,user.balance)
+    '''session.delete(user)
+    session.commit()'''
 
 MAX_MSG_LENGTH = 1024
 SERVER_PORT = 5555
@@ -17,6 +53,7 @@ client_sockets = []
 Coins_Results = {}
 Times_Results = {}
 winners_list = []
+
 
 class server:
 
@@ -88,15 +125,12 @@ class server:
             if c != winner:
                 msg = "You have lost"
                 c.send(msg.encode())
-                print("sent message to loser")
                 losers_list.append(c)
             else:
                 msg = "You have won this duel!"
                 c.send(msg.encode())
                 winners_list.append(c)
-        print(self.Recieved_Clients.values())
         if all(self.Recieved_Clients.values()) == True:
-            print (winners_list)
             self.set_Game_list([])
             for connection in winners_list:
                 msg = connection.recv(1024).decode()
@@ -104,7 +138,6 @@ class server:
                 if msg=="go":
                     self.client_sockets.append(connection)
                     self.Recieved_Clients[connection] = False
-            print(self.client_sockets)
             if len(self.client_sockets) == 2:
                 for c in self.client_sockets:
                     msg = "You can start"
@@ -114,7 +147,7 @@ class server:
             if len(self.client_sockets) == 1:
                 msg="You have won the Entire game!!"
                 self.client_sockets[0].send(msg.encode())
-                winners_list.remove(c)
+                winners_list.remove(self.client_sockets[0])
         for L in losers_list:
             req = L.recv(1024).decode()
             print(req)
@@ -143,7 +176,7 @@ def main():
                 connection, client_address = current_socket.accept()
                 print("New client joined!", client_address)
                 Request = connection.recv(MAX_MSG_LENGTH).decode()  # מקבל את הבקשה מאחד הלקוחות. שחקן, צופה או לשחק עוד הפעם
-                if Request=="go":
+                if Request == "go":
                     client_sockets.append(connection)
                     Waiting_Room.append(connection)
                     Recieved_Clients[connection] = False
@@ -153,7 +186,7 @@ def main():
                         for c in Waiting_Room:
                             msg = "You can start"
                             c.send(msg.encode()) #שולח לכל שחקן שהוא יכול להתחיל לשחק
-                        Players=int(len(Waiting_Room)/2)
+                        Players = int(len(Waiting_Room)/2)
                         for i in range(Players):
                             Game_list = Waiting_Room[0],Waiting_Room[1]
                             Lobby.set_Game_list(Game_list)
