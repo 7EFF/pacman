@@ -250,10 +250,10 @@ class PacMan:
                 [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, ],
                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ]
             ]
-            user = PacMan(self.my_socket, direction, gameBoard, self.square, self.screen, pacman, coinCount,
+            player = PacMan(self.my_socket, direction, gameBoard, self.square, self.screen, pacman, coinCount,
                           self.length, self.width, self.pacspeed, eatGhosts, mouthChange, self.wager, self.balance,
-                          False, True)
-            user.RecievedData = False
+                          False, True,self.username)
+            player.RecievedData = False
 
     def Intro_Render(self):
         while 1:
@@ -435,7 +435,7 @@ class PacMan:
             self.screen.blit(text, textRect)
             pygame.display.update()
             if self.sentData == False:
-                data_to_send = (self.coinCount, Time_Counter, False, self.wager, self.username)
+                data_to_send = (self.coinCount, Time_Counter, self.wager, self.username, False)
                 self.my_socket.send(pickle.dumps(data_to_send))
                 self.sentData = True
             if msg == "You have lost":
@@ -509,7 +509,7 @@ class PacMan:
             self.screen.blit(text, textRect)
             pygame.display.update()
             if self.sentData == False:
-                data_to_send = (self.coinCount, Time_Counter, True)
+                data_to_send = (self.coinCount, Time_Counter, self.wager, self.username, True)
                 self.my_socket.send(pickle.dumps(data_to_send))
                 self.sentData = True
             if msg == "You have lost":
@@ -544,18 +544,102 @@ class PacMan:
                 self.nextGame = True
                 return
 
+    ###########################END_OF_GAME###########################
 
-###########################END_OF_GAME###########################
+    ###########################SQL###########################
+
+    def verify(self):
+        inputCount = 0
+        signing = ""
+        username = ""
+        password = ""
+        string = ""
+        msg = "Log in or sign up?"
+        while 1:
+            self.screen.fill((0, 0, 30))
+            back_img = pygame.image.load("end_background.jpg")
+            back_img = pygame.transform.scale(back_img, (self.width, self.length))
+            self.screen.blit(back_img, (0, 0))
+            for event in pygame.event.get():
+                if event.type == KEYDOWN:
+                    if event.key == K_ESCAPE:
+                        pygame.quit()
+                        sys.exit()
+                    elif event.key == pygame.K_BACKSPACE:
+                        string = string[:-1]
+                    elif event.key == pygame.K_RETURN and string != "":
+                        if inputCount == 0:
+                            if string=="sign up" or string=="log in":
+                                signing = string
+                                inputCount = 1
+                                msg = "Enter username"
+                                string = ""
+                                break
+                            else:
+                                inputCount = 0
+                                string = ""
+                                break
+                        if inputCount == 1:
+                            username = string
+                            inputCount = 2
+                            msg = "Enter password"
+                            string = ""
+                            break
+                        if inputCount == 2:
+                            password = string
+                            running = True
+                            data_to_send = (signing, username, password)
+                            self.my_socket.send(pickle.dumps(data_to_send))
+                            msg = "Waiting for verifacation"
+                            while running == True:
+                                self.screen.fill((0, 0, 30))
+                                back_img = pygame.image.load("end_background.jpg")
+                                back_img = pygame.transform.scale(back_img, (self.width, self.length))
+                                self.screen.blit(back_img, (0, 0))
+                                Font = pygame.font.SysFont('arial black', self.square)
+                                text = Font.render(msg, True, (255, 0, 0))
+                                textRect = text.get_rect()
+                                textRect.center = (self.length / 2, self.width / 2)
+                                self.screen.blit(text, textRect)
+                                pygame.display.update()
+                                rlist, slist, xlist = select.select([self.my_socket], [], [], 0.1)
+                                for s in rlist:
+                                    data_from_client = pickle.loads(s.recv(1024))  # מקבל את המטבעות ואת הזמן של הלקוח
+                                    msg, self.balance = data_from_client
+                                    print(msg)
+                                    if msg =="Incorrect password or name" or msg =="Name already exists":
+                                        msg = "Enter username"
+                                        running = False
+                                    else:
+                                        self.username = username
+                                        return
+                            inputCount = 1
+                            string = ""
+                    else:
+                        string += event.unicode
+                if event.type == QUIT:
+                    pygame.quit()
+                    sys.exit()
+            Font = pygame.font.SysFont('arial black', int(self.square * 1.5))
+            text = Font.render(string, True, (255, 0, 0))
+            textRect = text.get_rect()
+            textRect.center = (self.length / 2, self.width / 2)
+            self.screen.blit(text, textRect)
+            Font = pygame.font.SysFont('arial black', self.square)
+            text = Font.render(msg, True, (255, 0, 0))
+            textRect = text.get_rect()
+            textRect.center = (self.length / 2, 60)
+            self.screen.blit(text, textRect)
+            pygame.display.update()
+
+
+###########################SQL###########################
 
 
 def main():
-    correctUser = False
-    user = []
+    username = ""
     balance = 1000
     correctPassword = False
-    signing = input("Would you like to log in or sign up? ")
-    username = input("Enter name")
-    passcode = input("Enter password")
     square = 20
     pacspeed = 1 / 64
     clock = pygame.time.Clock()
@@ -624,54 +708,17 @@ def main():
     wager = 0
     player = PacMan(my_socket, direction, gameBoard, square, screen, pacman, coinCount, length, width, pacspeed,
                     eatGhosts, mouthChange, wager, balance, False, False, username)
-
     my_socket.connect(('127.0.0.1', 5555))
-    if signing == "log in":
-        while correctUser == False:
-            data_to_send = (signing, username, passcode)
-            my_socket.send(pickle.dumps(data_to_send))
-            Font = pygame.font.SysFont('arial black', int(square))
-            text = Font.render('WAITING FOR YOU TO LOG IN', True, (255, 255, 0))
-            textRect = text.get_rect()
-            textRect.center = (length / 2, width / 2)
-            screen.blit(text, textRect)
-            pygame.display.update()
-            data_from_client = pickle.loads(my_socket.recv(2048))
-            msg, balance = data_from_client
-            if msg == "log in parameters are incorrect":
-                print(msg)
-                correctUser = False
-                username = input("Enter name")
-                passcode = input("Enter password")
-            else:
-                correctUser = True
-                print(msg, ". Your balance is", balance)
-                player.username = username
-    else:
-        data_to_send = (signing, username, passcode)
-        my_socket.send(pickle.dumps(data_to_send))
-        msg = my_socket.recv(1024).decode()
-        print(msg)
-    player.balance = balance
+    player.verify()
+    username = player.username
     player.wager_screen()
     wager = player.getWager()
-    my_socket.send("go".encode())
     player.Intro_Render()
-
+    my_socket.send("go".encode())
     Time_Counter = 1
     BigCoinChange = 0
-    for i in range(len(gameBoard[0])):
-        for j in range(len(gameBoard[1])):
-            pygame.draw.rect(screen, [0, 0, 0],
-                             (j * square, i * square, square, square))
-            pygame.draw.rect(screen, [0, 0, 77], (
-                j * square, i * square, int(square / 1.5), int(square / 1.5)))
-        if i == len(gameBoard[0]):
-            break
-        pygame.display.update()
     while 1:
         if player.RecievedData == False:
-
             Font = pygame.font.SysFont('arial black', int(square))
             text = Font.render('WAITING FOR ANOTHER PERSON', True, (255, 255, 0))
             textRect = text.get_rect()
@@ -699,7 +746,6 @@ def main():
                 msg = s.recv(1024).decode()
                 player.RecievedData = True
                 player.make_Ghosts()
-                print(msg)
                 if msg == "You can start":
                     player.has_died = False
                     player.all_eaten = False
@@ -835,6 +881,7 @@ def main():
                     mouthChange = 0
                     Time_Counter = 1
                     BigCoinChange = 0
+                    balance=player.balance
                     gameBoard = [
                         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
                         [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, ],
@@ -869,8 +916,7 @@ def main():
                         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ]
                     ]
                     player = PacMan(my_socket, direction, gameBoard, square, screen, pacman, coinCount, length, width,
-                                    pacspeed, eatGhosts, mouthChange, player.wager, player.balance, True, False,
-                                    username)
+                                    pacspeed, eatGhosts, mouthChange, player.wager, balance, True, False, username)
                     player.RecievedData = False
                 if died == 'eaten':
                     gh.eatenBlue()
