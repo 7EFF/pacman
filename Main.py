@@ -16,7 +16,7 @@ import select
 
 class PacMan:
     def __init__(self, my_socket, direction, gameBoard, square, screen, pacman, coinCount, length, width, pacspeed,
-                 eatGhosts, mouthChange, wager, balance, has_died, all_eaten, username):
+                 eatGhosts, mouthChange, wager, balance, has_died, all_eaten, username, password):
         self.my_socket = my_socket
         self.direction = direction
         self.gameBoard = gameBoard
@@ -41,8 +41,13 @@ class PacMan:
         self.has_died = has_died
         self.all_eaten = all_eaten
         self.username = username
+        self.password = password
+        self.msg = ""
 
     ###########################SET & GET###########################
+
+    def getMsg(self):
+        return self.msg
 
     def set_My_socket(self, my_socket):
         self.my_socket = my_socket
@@ -251,8 +256,8 @@ class PacMan:
                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ]
             ]
             player = PacMan(self.my_socket, direction, gameBoard, self.square, self.screen, pacman, coinCount,
-                          self.length, self.width, self.pacspeed, eatGhosts, mouthChange, self.wager, self.balance,
-                          False, True,self.username)
+                            self.length, self.width, self.pacspeed, eatGhosts, mouthChange, self.wager, self.balance,
+                            False, True, self.username,self.password)
             player.RecievedData = False
 
     def Intro_Render(self):
@@ -333,6 +338,18 @@ class PacMan:
                                             running = False
                                             break
                                         elif b2.collidepoint(pygame.mouse.get_pos()):
+                                            for i in range(len(self.gameBoard[0])):
+                                                for j in range(len(self.gameBoard[1])):
+                                                    pygame.draw.rect(self.screen, [0, 0, 0],
+                                                                     (j * self.square, i * self.square, self.square,
+                                                                      self.square))
+                                                    pygame.draw.rect(self.screen, [0, 0, 77], (
+                                                        j * self.square, i * self.square, int(self.square / 1.5),
+                                                        int(self.square / 1.5)))
+                                                time.sleep(4 / len(self.gameBoard[0]))
+                                                if i == len(self.gameBoard[0]):
+                                                    break
+                                                pygame.display.update()
                                             return
                                     if event.type == QUIT:
                                         pygame.quit()
@@ -548,7 +565,7 @@ class PacMan:
 
     ###########################SQL###########################
 
-    def verify(self):
+    def verify(self, Request):
         inputCount = 0
         signing = ""
         username = ""
@@ -569,7 +586,7 @@ class PacMan:
                         string = string[:-1]
                     elif event.key == pygame.K_RETURN and string != "":
                         if inputCount == 0:
-                            if string=="sign up" or string=="log in":
+                            if string == "sign up" or string == "log in":
                                 signing = string
                                 inputCount = 1
                                 msg = "Enter username"
@@ -607,11 +624,14 @@ class PacMan:
                                     data_from_client = pickle.loads(s.recv(1024))  # מקבל את המטבעות ואת הזמן של הלקוח
                                     msg, self.balance = data_from_client
                                     print(msg)
-                                    if msg =="Incorrect password or name" or msg =="Name already exists":
+                                    if msg == "Incorrect password or name" or msg == "Name already exists":
                                         msg = "Enter username"
                                         running = False
                                     else:
+                                        # self.msg = self.my_socket.recv(1024).decode()
+                                        self.my_socket.send(Request.encode())
                                         self.username = username
+                                        self.password = password
                                         return
                             inputCount = 1
                             string = ""
@@ -653,7 +673,7 @@ def main():
         KEYDOWN,
         QUIT,
     )
-
+    Request = input("Would you like to play or spectate?")
     gameBoard = [
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
         [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, ],
@@ -707,14 +727,12 @@ def main():
     my_socket = socket.socket()
     wager = 0
     player = PacMan(my_socket, direction, gameBoard, square, screen, pacman, coinCount, length, width, pacspeed,
-                    eatGhosts, mouthChange, wager, balance, False, False, username)
+                    eatGhosts, mouthChange, wager, balance, False, False, username, "")
     my_socket.connect(('127.0.0.1', 5555))
-    player.verify()
+    player.verify(Request)
     username = player.username
     player.wager_screen()
     wager = player.getWager()
-    player.Intro_Render()
-    my_socket.send("go".encode())
     Time_Counter = 1
     BigCoinChange = 0
     while 1:
@@ -857,6 +875,8 @@ def main():
                     back_img = pygame.transform.scale(back_img, (width, length))
                     screen.blit(back_img, (0, 0))
                     pygame.display.update()
+                    password=player.password
+                    username=player.username
                     if player.nextGame == True:  # אם ניצח
                         rlist, slist, xlist = select.select([player.my_socket], [], [], 0.1)
                         for s in rlist:
@@ -868,9 +888,10 @@ def main():
                         my_socket = socket.socket()
                         my_socket.connect(('127.0.0.1', 5555))
                         player.set_My_socket(my_socket)
+                        data_to_send = ("log in", username, password)
+                        my_socket.send(pickle.dumps(data_to_send))
+                        my_socket.send(Request.encode())
                         player.Queue_Again = False
-                    player.Intro_Render()
-                    my_socket.send("go".encode())
                     print("sent message")
                     pacman = [23, 13.5]
                     direction = 'up'
@@ -881,7 +902,7 @@ def main():
                     mouthChange = 0
                     Time_Counter = 1
                     BigCoinChange = 0
-                    balance=player.balance
+                    balance = player.balance
                     gameBoard = [
                         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
                         [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, ],
@@ -916,7 +937,7 @@ def main():
                         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ]
                     ]
                     player = PacMan(my_socket, direction, gameBoard, square, screen, pacman, coinCount, length, width,
-                                    pacspeed, eatGhosts, mouthChange, player.wager, balance, True, False, username)
+                                    pacspeed, eatGhosts, mouthChange, player.wager, balance, True, False, username,password)
                     player.RecievedData = False
                 if died == 'eaten':
                     gh.eatenBlue()
