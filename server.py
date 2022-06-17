@@ -1,16 +1,16 @@
+import math
 import socket
 import select
 import time
 import threading
 import pickle
-import math
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
 key = ""
 
-engine = create_engine('mysql://root:jt202004@localhost:3306/try', echo=False)
+engine = create_engine('mysql://root:Jt202004@localhost:3306/players_data', echo=False)
 
 Session = sessionmaker(bind=engine)
 session = Session()
@@ -33,51 +33,77 @@ class Users(Base):
         self.games_played = games_played
         self.games_won = games_won
 
-    def sign_up(self, connection, username, passcode):
-        user1 = Users(name=username, password=passcode, balance=1000, games_played=0, games_won=0)
-        session.add(user1)
-        session.commit()
-        msg = "Welcome to PacMan " + username
-        connection.send(msg.encode())
-
-    def changeBalnace(self, eaten_all, wager, username, win):
+    def changeBalance(self, win, wager, username, eaten_all):
         user = session.query(Users).filter(Users.name == username).first()
-        if eaten_all == False and win == False:
+        if win == False and eaten_all == False:
             user.balance = user.balance - wager
-        if eaten_all == False and win == True:
+        if win == True and eaten_all == False:
             user.balance = user.balance + wager
-        if eaten_all == True and win == True:
-            user.balance = user.balance + math.floor(wager * 3.5)
-        print(username, user.balance)
+        if win == False and eaten_all == True:
+            user.balance = user.balance + math.floor(2.5 * wager)
         session.commit()
+        return
 
-    def log_in(self, connection, username, passcode):
-        correctPassword = False
-        user = session.query(Users).filter(Users.name == username).first()
+    def getNamesList(self):
+        namesList = []
+        users = session.query(Users)
+        for user in users:
+            namesList.append(user.name)
+        return namesList
 
-        while correctPassword == False:
-            if user.password == passcode:
-                msg = "Welcome back " + str(user.name)
-                balance = user.balance
-                data_to_send = (msg, balance)
-                connection.send(pickle.dumps(data_to_send))
-                correctPassword = True
-                return
-            else:
-                msg = "log in parameters are incorrect"
-                balance = 0
-                data_to_send = (msg, balance)
-                connection.send(pickle.dumps(data_to_send))
-                data_from_client = pickle.loads(connection.recv(2048))  # מקבל את המטבעות ואת הזמן של הלקוח
-                signing, username, passcode = data_from_client
-                user = session.query(Users).filter(Users.name == username).first()
-
+    def signing(self, signing, username, password, connection):
+        if signing == "log in":
+            running = True
+            namesList = Users.getNamesList(self)
+            while running == True:
+                if username in namesList:
+                    user = session.query(Users).filter(Users.name == username).first()
+                    if user.password == password:
+                        msg = "Welcome back " + username
+                        balance = user.balance
+                        data_to_send = (msg, balance)
+                        connection.send(pickle.dumps(data_to_send))
+                        running = False
+                        return
+                    else:
+                        msg = "Incorrect password or name"
+                        balance = 0
+                        data_to_send = (msg, balance)
+                        connection.send(pickle.dumps(data_to_send))
+                        data_from_client = pickle.loads(connection.recv(2048))  # מקבל את הסיסמה, השם והסוג כניסה של המשתמש
+                        signing, username, password = data_from_client
+                else:
+                    msg = "Incorrect password or name"
+                    balance = 0
+                    data_to_send = (msg, balance)
+                    connection.send(pickle.dumps(data_to_send))
+                    data_from_client = pickle.loads(connection.recv(2048))  # מקבל את הסיסמה, השם והסוג כניסה של המשתמש
+                    signing, username, password = data_from_client
+        if signing=="sign up":
+            running = True
+            namesList = Users.getNamesList(self)
+            while running == True:
+                if username not in namesList:
+                    user = Users(name=username, password=password, balance=1000, games_played=0, games_won=0)
+                    session.add(user)
+                    session.commit()
+                    msg = "Welcome to PacMn"
+                    balance=1000
+                    data_to_send = (msg, balance)
+                    connection.send(pickle.dumps(data_to_send))
+                    running=False
+                    return
+                else:
+                    msg = "Name already exists"
+                    balance = 0
+                    data_to_send = (msg, balance)
+                    connection.send(pickle.dumps(data_to_send))
+                    data_from_client = pickle.loads(connection.recv(2048))  # מקבל את הסיסמה, השם והסוג כניסה של המשתמש
+                    signing, username, password = data_from_client
 
 users = session.query(Users)
 for user in users:
     print(user.id, user.name, user.password, user.balance)
-    '''session.delete(user)
-    session.commit()'''
 
 MAX_MSG_LENGTH = 1024
 SERVER_PORT = 5555
@@ -101,9 +127,6 @@ class server:
         self.current_socket = current_socket
         self.Coins_Results = {}
         self.Times_Results = {}
-        self.Eaten_all = {}
-        self.wagers = {}
-        self.Usernames = {}
         self.Recieved_Clients = Recieved_Clients
         self.QueueAgain = []
 
@@ -124,10 +147,7 @@ class server:
         winners_list = []
         for c in self.client_sockets:
             data_from_client = pickle.loads(c.recv(2048))  # מקבל את המטבעות ואת הזמן של הלקוח
-            Result_Coins, Result_Time, eaten_all, wager, username = data_from_client
-            self.Eaten_all[c] = eaten_all
-            self.wagers[c] = wager
-            self.Usernames[c] = username
+            Result_Coins, Result_Time, wager, username, eaten_all = data_from_client
             if Result_Coins == -1:
                 client_sockets.remove(c)
                 del self.Recieved_Clients[c]
@@ -138,10 +158,9 @@ class server:
             self.Times_Results[c] = Result_Time
             print(Result_Time, "Time")
             self.Recieved_Clients[c] = True  # מסמן שאותו לקוח שלח את כל מה שהיה צריך לשלוח
-        self.checkWinner()  # בודק מי ניצח באחד המשחקים
-        return
+        self.checkWinner(wager, username, eaten_all)  # בודק מי ניצח באחד המשחקים
 
-    def checkWinner(self):
+    def checkWinner(self, wager, username, eaten_all):
         maxCoins = 0
         minTime = 0
         maxCoinsClient = ""
@@ -168,10 +187,12 @@ class server:
         losers_list = []
         for c in self.client_sockets:
             if c != winner:
+                Users.changeBalance(user, False, wager, username, eaten_all)
                 msg = "You have lost"
                 c.send(msg.encode())
                 losers_list.append(c)
             else:
+                Users.changeBalance(user, True, wager, username, eaten_all)
                 msg = "You have won this duel!"
                 c.send(msg.encode())
                 winners_list.append(c)
@@ -193,54 +214,37 @@ class server:
                 msg = "You have won the Entire game!!"
                 self.client_sockets[0].send(msg.encode())
                 winners_list.remove(self.client_sockets[0])
-                print(self.Eaten_all[client_sockets[0]], self.wagers[client_sockets[0]],
-                      self.Usernames[client_sockets[0]])
-                Users.changeBalnace(user, self.Eaten_all[client_sockets[0]], self.wagers[client_sockets[0]],
-                                    self.Usernames[client_sockets[0]], True)
         for L in losers_list:
-            print(self.Eaten_all[losers_list[L]], self.wagers[losers_list[L]], self.Usernames[losers_list[L]])
-            Users.changeBalnace(user, self.Eaten_all[L], self.wagers[L], self.Usernames[L], False)
             req = L.recv(1024).decode()
             print(req)
             losers_list.remove(L)
             del self.Recieved_Clients[L]
-
-    '''def checkIfGameOver(self):
-        if len(self.winners_list)==1:
-            msg = "You have won this game!!"
-            self.winners_list[0].send(msg.encode())
-        else:
-            for c in self.winners_list:
-                msg = "You will fight the other winner soon"
-                c.send(msg.encode())'''
-
 
 def main():
     Recieved_Clients = {}
     Number_Clients = 0
     Waiting_Room = []
     Game_list = []
-    while 1:
-        rlist, wlist, xlist = select.select([server_socket] + client_sockets, client_sockets, [])
+    while True:
+        rlist, wlist, xlist = select.select([server_socket] + client_sockets, client_sockets, [],0.1)
         for current_socket in rlist:
             if current_socket is server_socket:
                 connection, client_address = current_socket.accept()
                 print("New client joined!", client_address)
-                data_from_client = pickle.loads(connection.recv(1024))  # מקבל את המטבעות ואת הזמן של הלקוח
-                print(data_from_client)
-                signing, username, passcode = data_from_client
-                if signing == "log in":
-                    Users.log_in(user, connection, username, passcode)
-                else:
-                    Users.sign_up(user, connection, username, passcode)
-                Request = connection.recv(1024).decode()  # מקבל את הבקשה מאחד הלקוחות. שחקן, צופה או לשחק עוד הפעם
+                client_sockets.append(connection)
+                data_from_client = pickle.loads(connection.recv(2048))  # מקבל את הסיסמה, השם והסוג כניסה של המשתמש
+                signing, username, password = data_from_client
+                Users.signing(user, signing, username, password, connection)
+            else:
+                Request = current_socket.recv(MAX_MSG_LENGTH).decode()  # מקבל את הבקשה מאחד הלקוחות. שחקן, צופה או לשחק עוד הפעם
+                print(Request)
                 if Request == "go":
-                    client_sockets.append(connection)
-                    Waiting_Room.append(connection)
-                    Recieved_Clients[connection] = False
+                    client_sockets.append(current_socket)
+                    Waiting_Room.append(current_socket)
+                    Recieved_Clients[current_socket] = False
                     Lobby = server(client_sockets, current_socket, Recieved_Clients)  # יוצר את המשחק הכללי
                     x = threading.Thread(target=Lobby.Game)  # יוצר משחק בין שני אנשים
-                    if len(Waiting_Room) == 2:
+                    if len(Waiting_Room) >= 2:
                         for c in Waiting_Room:
                             msg = "You can start"
                             c.send(msg.encode())  # שולח לכל שחקן שהוא יכול להתחיל לשחק
