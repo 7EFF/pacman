@@ -224,7 +224,8 @@ class server:
                 for connection in bet_on:
                     if bet_on[connection] == names_list[c]:
                         msg = "Your bet has lost"
-                        connection.send(msg.encode())
+                        data_to_send = (msg, 0, 0)
+                        connection.send(pickle.dumps(data_to_send))
                         user = session.query(Users).filter(Users.name == spectators_list[connection]).first()
                         user.balance = user.balance - spect_wagers[connection]
                 Users.changeBalance(user, False, wagers_list[c], names_list[c], eaten_all_list[c])
@@ -238,7 +239,8 @@ class server:
                 for connection in bet_on:
                     if bet_on[connection] == names_list[c]:
                         msg = "Your bet has won"
-                        connection.send(msg.encode())
+                        data_to_send = (msg, 0, 0)
+                        connection.send(pickle.dumps(data_to_send))
                         user = session.query(Users).filter(Users.name == spectators_list[connection]).first()
                         user.balance = user.balance + spect_wagers[connection]
                 Users.changeBalance(user, True, wagers_list[c], names_list[c], eaten_all_list[c])
