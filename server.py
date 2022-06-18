@@ -23,6 +23,8 @@ client_sockets = []
 Coins_Results = {}
 Times_Results = {}
 bet_on = {}
+spect_wagers = {}
+spectators_list = {}
 winners_list = []
 
 
@@ -54,7 +56,7 @@ class Users(Base):
         if win == True and eaten_all == True:
             user.games_won += 1
             user.balance = user.balance + math.floor(2.5 * wager)
-        #print(user.balance, "is what", username, " now has")
+        # print(user.balance, "is what", username, " now has")
         user.games_played += 1
         user.online = False
         session.commit()
@@ -146,7 +148,7 @@ class server:
         self.Times_Results = {}
         self.Recieved_Clients = Recieved_Clients
         self.QueueAgain = []
-        self.spect_wagers = {}
+        spect_wagers = {}
 
     ##########################SETS & GETS##########################
 
@@ -165,7 +167,7 @@ class server:
 
     ##########################SETS & GETS##########################
 
-    ##########################DUAL##########################
+    ##########################DUEL##########################
 
     def Game(self):
         names_list = {}
@@ -185,9 +187,9 @@ class server:
             wagers_list[c] = wager
             eaten_all_list[c] = eaten_all
             self.Coins_Results[c] = Result_Coins
-            #print(Result_Coins, "Coins ", username, " has gotten")
+            # print(Result_Coins, "Coins ", username, " has gotten")
             self.Times_Results[c] = Result_Time
-            #print(Result_Time, "Time", username, " has gotten")
+            # print(Result_Time, "Time", username, " has gotten")
             self.Recieved_Clients[c] = True  # מסמן שאותו לקוח שלח את כל מה שהיה צריך לשלוח
         self.checkWinner(wagers_list, names_list, eaten_all_list)  # בודק מי ניצח באחד המשחקים
 
@@ -219,28 +221,31 @@ class server:
         losers_list = []
         for c in self.game_sockets:
             if c != winner:
+                for connection in bet_on:
+                    if bet_on[connection] == names_list[c]:
+                        msg = "Your bet has lost"
+                        connection.send(msg.encode())
+                        user = session.query(Users).filter(Users.name == spectators_list[connection]).first()
+                        user.balance = user.balance - spect_wagers[connection]
                 Users.changeBalance(user, False, wagers_list[c], names_list[c], eaten_all_list[c])
                 msg = "You have lost"
                 c.send(msg.encode())
                 client_sockets.remove(c)
                 del self.Recieved_Clients[c]
                 In_game.remove(c)
-                print(bet_on)
-                print(names_list)
+
+            else:
                 for connection in bet_on:
                     if bet_on[connection] == names_list[c]:
-                        msg = "Your bet has lost"
+                        msg = "Your bet has won"
                         connection.send(msg.encode())
-            else:
+                        user = session.query(Users).filter(Users.name == spectators_list[connection]).first()
+                        user.balance = user.balance + spect_wagers[connection]
                 Users.changeBalance(user, True, wagers_list[c], names_list[c], eaten_all_list[c])
                 print("SENDING WON THIS DUEL")
                 msg = "You have won this duel!"
                 c.send(msg.encode())
                 winners_list.append(c)
-                for connection in bet_on:
-                    if bet_on[connection] == names_list[c]:
-                        msg = "Your bet has won"
-                        connection.send(msg.encode())
 
         ##### After game ended #####
 
@@ -273,13 +278,13 @@ class server:
         else:
             return
 
-    ##########################DUAL##########################
+    ##########################DUEL##########################
 
     ##########################SPECTATORS##########################
 
-    def choose(self, spectators_list, users, connection):
+    def choose(self, users, connection):
         for user in users:
-            if user.name not in spectators_list:
+            if user.name not in spectators_list.values():
                 data_to_send = (user.name, user.games_played, user.games_won)
                 connection.send(pickle.dumps(data_to_send))
                 print(user.name, user.games_played, user.games_won)
@@ -287,20 +292,15 @@ class server:
                 Request, wager = data_from_client
                 print(Request)
                 if Request == "yes":
-                    self.spect_wagers[connection] = wager
+                    spect_wagers[connection] = wager
                     bet_on[connection] = user.name
-                    print(self.spect_wagers)
-                    print(bet_on)
-
                     break
         return
 
-    def spectate(self, spectators_list):
-        print(self.spect_wagers)
-        print(bet_on)
+    def spectate(self):
         users = session.query(Users)
-        for connection in spectators_list.values():
-            x = threading.Thread(target=self.choose, args=(spectators_list, users, connection,), daemon=True)
+        for connection in spectators_list:
+            x = threading.Thread(target=self.choose, args=(users, connection,), daemon=True)
             x.start()
         return
 
@@ -309,7 +309,6 @@ class server:
 
 def main():
     global In_game
-    spectators_list = {}
     Recieved_Clients = {}
     Number_Clients = 0
     Waiting_Room: List[socket.socket] = []
@@ -331,12 +330,10 @@ def main():
             else:
                 if current_socket not in Waiting_Room and current_socket not in In_game:
                     ret = current_socket.recv(2048)
-                    print(ret)
                     if not ret:
                         client_sockets.remove(current_socket)
                         continue
                     data_from_client = pickle.loads(ret)
-                    print("got data", addresses[current_socket])
                     signing, username, password = data_from_client
                     Users.signing(user, signing, username, password, current_socket)
                     Request = current_socket.recv(
@@ -347,9 +344,9 @@ def main():
                         Waiting_Room.append(current_socket)
                         Recieved_Clients[current_socket] = False
                     if Request == "spectate":
-                        spectators_list[username] = current_socket
+                        spectators_list[current_socket] = username
                         Lobby = server(Recieved_Clients)  # יוצר את המשחק הכללי
-                        x = threading.Thread(target=Lobby.spectate, args=(spectators_list,), daemon=True)
+                        x = threading.Thread(target=Lobby.spectate, daemon=True)
                         x.start()
         # search for 2 clients in waiting room
 
@@ -366,7 +363,7 @@ def main():
             lobby.set_Game_list(Game_list)
             x.start()
             print("Started Game!")
-            print([addresses[i] for i in sockets_to_game])
+
 
         time.sleep(0.1)
 
