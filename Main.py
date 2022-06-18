@@ -47,6 +47,7 @@ class PacMan:
         self.msg = ""
         self.win = False
         self.Request = ""
+        self.nowSpectator=False
 
     ###########################SET & GET###########################
 
@@ -513,6 +514,7 @@ class PacMan:
                         return
                     if event.key == K_s and msg == "You have lost":
                         self.my_socket.close()
+                        self.nowSpectator=True
                         return
                 if event.type == QUIT:
                     end_time = time.time()
@@ -590,6 +592,7 @@ class PacMan:
                         return
                     if event.key == K_s and msg == "You have lost":
                         self.my_socket.close()
+                        self.nowSpectator = True
                         return
                 if event.type == QUIT:
                     end_time = time.time()
@@ -974,6 +977,16 @@ def main():
                                 msg = s.recv(1024).decode()
                                 print(msg)
                                 player.nextGame = False
+                        if player.nowSpectator==True:
+                            player.wager_screen()
+                            my_socket = socket.socket()
+                            my_socket.connect(('127.0.0.1', 5555))
+                            player.set_My_socket(my_socket)
+                            data_to_send = (signing, username, password)
+                            my_socket.send(pickle.dumps(data_to_send))
+                            confirmation = my_socket.recv(1024)
+                            my_socket.send("spectate".encode())
+                            player.Queue_Again = False
                         if player.Queue_Again:  # אם הפסיד ורוצה לשחק במשחק חדש
                             player.wager_screen()
                             my_socket = socket.socket()
@@ -983,7 +996,7 @@ def main():
                             my_socket.send(pickle.dumps(data_to_send))
                             confirmation = my_socket.recv(1024)
                             print(confirmation)
-                            my_socket.send(player.Request.encode())
+                            my_socket.send("play".encode())
                             player.Queue_Again = False
 
                         if player.win:
