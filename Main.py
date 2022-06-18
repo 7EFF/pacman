@@ -412,11 +412,8 @@ class PacMan:
             pygame.display.update()
 
     def spectate(self):
+        msg=""
         while 1:
-            self.screen.fill((0, 0, 0))
-            back_img = pygame.image.load("end_background.jpg")
-            back_img = pygame.transform.scale(back_img, (self.width, self.length))
-            self.screen.blit(back_img, (0, 0))
             for event in pygame.event.get():
                 if event.type == KEYDOWN:
                     if event.key == K_ESCAPE:
@@ -427,21 +424,6 @@ class PacMan:
                         self.my_socket.send(pickle.dumps(data_to_send))
                         print("betted on", username)
                         msg = "Waiting for results"
-                        while 1:
-                            self.screen.fill((0, 0, 0))
-                            back_img = pygame.image.load("end_background.jpg")
-                            back_img = pygame.transform.scale(back_img, (self.width, self.length))
-                            self.screen.blit(back_img, (0, 0))
-                            Font = pygame.font.SysFont('arial black', self.square)
-                            text = Font.render(msg, True, (255, 0, 0))
-                            textRect = text.get_rect()
-                            textRect.center = (self.length / 2, self.width / 2)
-                            self.screen.blit(text, textRect)
-                            pygame.display.update()
-                            rlist, slist, xlist = select.select([self.my_socket], [], [], 0.1)
-                            for s in rlist:
-                                msg = s.recv(1024).decode()
-                                print(msg)
                     if event.key == K_n:
                         data_to_send = ("no", self.wager)
                         self.my_socket.send(pickle.dumps(data_to_send))
@@ -449,6 +431,17 @@ class PacMan:
                     self.my_socket.close()
                     pygame.quit()
                     sys.exit()
+            if msg == "Waiting for results":
+                self.screen.fill((0, 0, 0))
+                back_img = pygame.image.load("end_background.jpg")
+                back_img = pygame.transform.scale(back_img, (self.width, self.length))
+                self.screen.blit(back_img, (0, 0))
+                Font = pygame.font.SysFont('arial black', self.square)
+                text = Font.render(msg, True, (255, 0, 0))
+                textRect = text.get_rect()
+                textRect.center = (self.length / 2, self.width / 4)
+                self.screen.blit(text, textRect)
+                pygame.display.update()
             rlist, slist, xlist = select.select([self.my_socket], [], [], 0.1)
             for s in rlist:
                 data_from_client = pickle.loads(s.recv(1024))  # מקבל את המטבעות ואת הזמן של הלקוח
@@ -478,6 +471,18 @@ class PacMan:
                     textRect.center = (self.length / 2, math.floor(self.width / 1.3))
                     self.screen.blit(text, textRect)
                     pygame.display.update()
+                if username=="Your bet has lost" or username=="Your bet has won":
+                    self.screen.fill((0, 0, 0))
+                    back_img = pygame.image.load("end_background.jpg")
+                    back_img = pygame.transform.scale(back_img, (self.width, self.length))
+                    self.screen.blit(back_img, (0, 0))
+                    Font = pygame.font.SysFont('arial black', math.floor(self.square*1.5))
+                    msg = username
+                    text = Font.render(msg, True, (255, 0, 0))
+                    textRect = text.get_rect()
+                    textRect.center = (self.length / 2, self.width / 2)
+                    self.screen.blit(text, textRect)
+                    pygame.display.update()
 
     ###########################DRAWING###########################
 
@@ -495,6 +500,10 @@ class PacMan:
             for event in pygame.event.get():
                 if event.type == KEYDOWN:
                     if event.key == K_ESCAPE:
+                        end_time = time.time()
+                        Time_Counter = int(end_time - start_time)
+                        data_to_send = (0, Time_Counter, self.wager, self.username, False)
+                        self.my_socket.send(pickle.dumps(data_to_send))
                         self.my_socket.close()
                         pygame.quit()
                         sys.exit()
@@ -506,6 +515,10 @@ class PacMan:
                         self.my_socket.close()
                         return
                 if event.type == QUIT:
+                    end_time = time.time()
+                    Time_Counter = int(end_time - start_time)
+                    data_to_send = (0, Time_Counter, self.wager, self.username, False)
+                    self.my_socket.send(pickle.dumps(data_to_send))
                     self.my_socket.close()
                     pygame.quit()
                     sys.exit()
@@ -526,8 +539,8 @@ class PacMan:
             self.screen.blit(text, textRect)
             pygame.display.update()
             if not self.sentData:
-                end_time=time.time()
-                Time_Counter=int(end_time-start_time)
+                end_time = time.time()
+                Time_Counter = int(end_time - start_time)
                 print(Time_Counter, "sending time")
                 data_to_send = (self.coinCount, Time_Counter, self.wager, self.username, False)
                 self.my_socket.send(pickle.dumps(data_to_send))
@@ -537,20 +550,6 @@ class PacMan:
                     self.balance = self.balance - self.wager
                     print("Your balance is now:", self.balance)
                     printed_Money = True
-                for event in pygame.event.get():
-                    if event.type == KEYDOWN:
-                        if event.key == K_ESCAPE:
-                            self.my_socket.send(str(0).encode())
-                            time.sleep(0.05)
-                            #self.my_socket.send(str(Time_Counter).encode())
-                            self.my_socket.close()
-                    if event.type == QUIT:
-                        self.my_socket.send(str(0).encode())
-                        time.sleep(0.5)
-                        #self.my_socket.send(str(Time_Counter).encode())
-                        self.my_socket.close()
-                        pygame.quit()
-                        sys.exit()
                 Font = pygame.font.SysFont('arial black', int(1.5 * self.square))
                 text = Font.render('PRESS Q TO QUEUE AGAIN', True, (255, 255, 0))
                 textRect = text.get_rect()
@@ -563,27 +562,40 @@ class PacMan:
                 pygame.display.update()
             if msg == "You have won this duel!":
                 self.win = True
-                # self.nextGame = True
                 self.Queue_Again = False
                 return
 
     def winning(self):
+        death_Sound = mixer.Sound('Sounds\pacman_death.wav')
+        death_Sound.set_volume(0.2)
+        death_Sound.play()
         msg = ""
         printed_Money = False
+        self.RecievedData = False
         while 1:
             rlist, slist, xlist = select.select([self.my_socket], [], [], 0.1)
             for event in pygame.event.get():
                 if event.type == KEYDOWN:
                     if event.key == K_ESCAPE:
+                        end_time = time.time()
+                        Time_Counter = int(end_time - start_time)
+                        data_to_send = (0, Time_Counter, self.wager, self.username, False)
+                        self.my_socket.send(pickle.dumps(data_to_send))
                         self.my_socket.close()
                         pygame.quit()
                         sys.exit()
                     if event.key == K_q and msg == "You have lost":
+                        self.my_socket.close()
                         self.Queue_Again = True
                         return
                     if event.key == K_s and msg == "You have lost":
+                        self.my_socket.close()
                         return
                 if event.type == QUIT:
+                    end_time = time.time()
+                    Time_Counter = int(end_time - start_time)
+                    data_to_send = (0, Time_Counter, self.wager, self.username, False)
+                    self.my_socket.send(pickle.dumps(data_to_send))
                     self.my_socket.close()
                     pygame.quit()
                     sys.exit()
@@ -591,44 +603,29 @@ class PacMan:
             back_img = pygame.image.load("end_background.jpg")
             back_img = pygame.transform.scale(back_img, (self.width, self.length))
             self.screen.blit(back_img, (0, 0))
-            Font = pygame.font.SysFont('arial black', int(1.5 * self.square))
+            Font = pygame.font.SysFont('arial black', self.square)
             for s in rlist:
                 msg = s.recv(1024).decode()
                 print(msg)
                 self.RecievedData = True
-            if self.RecievedData == False:
+            if not self.RecievedData:
                 msg = 'YOU HAVE EATEN EVERY COIN, WAITING FOR RESULT'
             text = Font.render(msg, True, (255, 0, 0))
             textRect = text.get_rect()
             textRect.center = (self.length / 2, self.width / 2)
             self.screen.blit(text, textRect)
             pygame.display.update()
-            if self.sentData == False:
+            if not self.sentData:
                 end_time = time.time()
                 Time_Counter = int(end_time - start_time)
-                print("Time", Time_Counter)
-                data_to_send = (self.coinCount, Time_Counter, self.wager, self.username, True)
+                data_to_send = (self.coinCount, Time_Counter, self.wager, self.username, False)
                 self.my_socket.send(pickle.dumps(data_to_send))
                 self.sentData = True
             if msg == "You have lost":
-                self.my_socket.close()
                 if printed_Money == False:
+                    self.balance = self.balance - self.wager
                     print("Your balance is now:", self.balance)
                     printed_Money = True
-                for event in pygame.event.get():
-                    if event.type == KEYDOWN:
-                        if event.key == K_ESCAPE:
-                            self.my_socket.send(str(0).encode())
-                            time.sleep(0.05)
-                            #self.my_socket.send(str(Time_Counter).encode())
-                            self.my_socket.close()
-                    if event.type == QUIT:
-                        self.my_socket.send(str(0).encode())
-                        time.sleep(0.5)
-                        #self.my_socket.send(str(Time_Counter).encode())
-                        self.my_socket.close()
-                        pygame.quit()
-                        sys.exit()
                 Font = pygame.font.SysFont('arial black', int(1.5 * self.square))
                 text = Font.render('PRESS Q TO QUEUE AGAIN', True, (255, 255, 0))
                 textRect = text.get_rect()
@@ -641,7 +638,7 @@ class PacMan:
                 pygame.display.update()
             if msg == "You have won this duel!":
                 self.win = True
-                self.nextGame = True
+                self.Queue_Again = False
                 return
 
     ###########################END_OF_GAME###########################
@@ -824,7 +821,7 @@ def main():
     player.wager_screen()
     wager = player.getWager()
     if player.Request == "play":
-        start_time=time.time()
+        start_time = time.time()
         BigCoinChange = 0
         while 1:
             if player.RecievedData == False:
@@ -839,13 +836,13 @@ def main():
                         if event.key == K_ESCAPE:
                             my_socket.send(str(0).encode())
                             time.sleep(0.05)
-                            #my_socket.send(str(Time_Counter).encode())
+                            # my_socket.send(str(Time_Counter).encode())
                             my_socket.close()
                             running = False
                     if event.type == QUIT:
                         my_socket.send(str(0).encode())
                         time.sleep(0.05)
-                        #my_socket.send(str(Time_Counter).encode())
+                        # my_socket.send(str(Time_Counter).encode())
                         my_socket.close()
                         pygame.quit()
                         sys.exit()
@@ -876,13 +873,13 @@ def main():
                                     if event.key == K_ESCAPE:
                                         my_socket.send(str(0).encode())
                                         time.sleep(0.05)
-                                        #my_socket.send(str(Time_Counter).encode())
+                                        # my_socket.send(str(Time_Counter).encode())
                                         my_socket.close()
                                         running = False
                                 if event.type == QUIT:
                                     my_socket.send(str(0).encode())
                                     time.sleep(0.05)
-                                    #my_socket.send(str(Time_Counter).encode())
+                                    # my_socket.send(str(Time_Counter).encode())
                                     my_socket.close()
                                     pygame.quit()
                                     sys.exit()
@@ -906,7 +903,7 @@ def main():
                         if event.key == K_ESCAPE:
                             my_socket.send(str(-1).encode())
                             time.sleep(0.05)
-                            #my_socket.send(str(Time_Counter).encode())
+                            # my_socket.send(str(Time_Counter).encode())
                             my_socket.close()
                             running = False
                         elif event.key == K_UP or event.key == K_w:
@@ -920,7 +917,7 @@ def main():
                     if event.type == QUIT:
                         my_socket.send(str(-1).encode())
                         time.sleep(0.05)
-                        #my_socket.send(str(Time_Counter).encode())
+                        # my_socket.send(str(Time_Counter).encode())
                         my_socket.close()
                         pygame.quit()
                         sys.exit()
