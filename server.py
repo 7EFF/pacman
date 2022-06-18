@@ -259,7 +259,7 @@ class server:
                 if msg == "go":
                     self.game_sockets.append(connection)
                     self.Recieved_Clients[connection] = False
-            if len(self.game_sockets) == 2:
+            if len(self.game_sockets) >= 2:
                 print("CLIENTS START NEW MATCH FINAL")
                 for c in self.game_sockets:
                     msg = "You can start"
